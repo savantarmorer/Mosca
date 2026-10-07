@@ -45,7 +45,7 @@ form.addEventListener('submit', async (e) => {
     say('Enviando…');
     const r = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${id}.pgp`, {
       method: 'POST', referrerPolicy: 'no-referrer', credentials: 'omit',
-      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' },
+      headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' },
       body: cifrado,
     });
     if (!r.ok) throw new Error(r.status);
