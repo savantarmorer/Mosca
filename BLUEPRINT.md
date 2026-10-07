@@ -2,14 +2,16 @@
 
 ## Estrutura
 ```
-index.html                                         Home (manchete, Em Foco, sidebar, CTA anônimo)
-politica/redes-sociais-ocultam-perfil-oficial-de-lula/index.html   Artigo nº 001
-denuncia/index.html                                Canal anônimo (frontend)
-assets/mosca.css                                   Tokens, tipografia, grão de filme, drop cap
-robots.txt · sitemap.xml · news-sitemap.xml        Indexação
+scripts/build.mjs        Gera capa, seções, matérias, sitemaps e RSS a cada deploy (Netlify)
+content/posts/*.json     Matérias guardadas no repositório (ex.: 001)
+admin/                   Painel da redação (login Supabase, editor, denúncias, configuração)
+denuncia/                Canal anônimo (criptografia PGP no navegador → Supabase Storage)
+supabase/schema.sql      Tabelas, permissões (RLS) e buckets — rodar no SQL Editor
+assets/config.js         URL e chave publishable do Supabase (públicas)
+tools/abrir-denuncia.mjs Abre denúncias fora do navegador, com a chave privada
 ```
-Protótipo estático (Tailwind via CDN). Para produção: migrar para **Astro** (SSR/SSG, zero JS por padrão), compilar o Tailwind, gerar sitemaps/RSS a partir do conteúdo (Markdown/MDX) e converter imagens para AVIF/WebP com `srcset`.
-
+Rodar localmente: `npm install && npm run dev` (http://localhost:8080).
+Fluxo de publicação: /admin → Publicar → Supabase → build hook do Netlify → `scripts/build.mjs` gera as páginas estáticas.
 ## Linha editorial
 - **Missão:** fiscalizar o poder político e econômico — elite financeira, pautas conservadoras, plataformas e seus interesses. A seleção de pauta é declaradamente crítica; a apuração, não.
 - **Regra de ouro:** toda afirmação de fato tem fonte verificável (documento, dado público, registro reproduzível) linkada no texto. Opinião vai rotulada como "Análise".

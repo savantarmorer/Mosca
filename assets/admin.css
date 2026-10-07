@@ -1,0 +1,21 @@
+.campo{display:block}
+.campo>span{display:block;font-family:'Inter',Helvetica,sans-serif;font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
+.campo input:not([type=checkbox]):not([type=radio]):not([type=file]),.campo textarea,.campo select{width:100%;background:rgba(255,255,255,.55);border:1px solid var(--fio);padding:.5rem .65rem;font-size:1rem;border-radius:0}
+.campo :focus{outline:none;border-color:var(--vinho)}
+.btn,.btn-sec{font-family:'Inter',sans-serif;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:.65rem 1.1rem;border:1px solid var(--tinta)}
+.btn{background:var(--tinta);color:var(--papel)}.btn:hover{background:var(--vinho);border-color:var(--vinho)}
+.btn-sec:hover{border-color:var(--vinho);color:var(--vinho)}
+.btn:disabled,.btn-sec:disabled{opacity:.45;cursor:wait}
+.btn-link{text-decoration:underline;text-underline-offset:3px}.btn-link:hover{color:var(--vinho)}
+.aba{padding:.6rem 0;border-bottom:2px solid transparent;margin-bottom:-1px}
+.aba[aria-selected=true]{border-color:var(--vinho);color:var(--vinho)}
+.modo input{position:absolute;opacity:0}.modo span{display:inline-block;border:1px solid var(--fio);padding:.25rem .6rem;cursor:pointer}
+.modo input:checked+span{background:var(--tinta);color:var(--papel)}
+.painel{border:1px solid var(--fio);padding:1rem;display:flex;flex-direction:column;gap:.85rem}
+.painel h2{font-family:'Inter',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.18em}
+#quill{background:rgba(255,255,255,.55);min-height:480px;font-family:'Lora',Georgia,serif}
+.ql-toolbar.ql-snow,.ql-container.ql-snow{border-color:var(--fio)!important}
+.ql-editor{font-size:1.1rem;line-height:1.75;min-height:480px}
+.ql-editor p:first-of-type::first-letter{all:unset}
+.ql-snow .ql-editor blockquote{border-left:3px solid var(--vinho);font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:1.4rem}
+#tbody-materias td{padding:.7rem 0;border-bottom:1px solid #d6d3cc;vertical-align:top}

@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /api/
+Disallow: /admin/
 Sitemap: https://mosca.news/sitemap.xml
 Sitemap: https://mosca.news/news-sitemap.xml

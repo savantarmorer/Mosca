@@ -1,0 +1,87 @@
+-- Mosca — esquema completo. Rodar no SQL Editor do Supabase (pode rodar de novo sem problema).
+-- Depois: criar o usuário em Authentication → Users e rodar o bloco "ADMIN" no fim deste arquivo.
+
+-- ───────────── Administradores ─────────────
+create table if not exists public.admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  criado_em timestamptz not null default now()
+);
+alter table public.admins enable row level security;
+
+create or replace function public.is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.admins where user_id = auth.uid());
+$$;
+
+drop policy if exists "admins_self" on public.admins;
+create policy "admins_self" on public.admins for select to authenticated using (user_id = auth.uid());
+
+-- ───────────── Matérias ─────────────
+create table if not exists public.posts (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
+  titulo text not null,
+  linha_fina text,
+  descricao text,                       -- meta description (SEO), até ~160 caracteres
+  secao text not null default 'politica'
+    check (secao in ('politica','economia','plataformas','investigacoes','documentos')),
+  secoes_extra text[] not null default '{}',
+  kicker text,
+  assinatura text not null default 'Redação Mosca',
+  palavras_chave text[] not null default '{}',
+  capa_url text, capa_alt text, capa_credito text,
+  formato text not null default 'rich' check (formato in ('rich','html','texto')),
+  conteudo text not null default '',
+  status text not null default 'rascunho' check (status in ('rascunho','publicado')),
+  destaque boolean not null default false,
+  publicado_em timestamptz,
+  atualizado_em timestamptz not null default now(),
+  criado_em timestamptz not null default now()
+);
+alter table public.posts enable row level security;
+
+drop policy if exists "posts_publicos" on public.posts;
+create policy "posts_publicos" on public.posts for select to anon, authenticated using (status = 'publicado');
+drop policy if exists "posts_admin" on public.posts;
+create policy "posts_admin" on public.posts for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- ───────────── Configuração (chave PGP, build hook) ─────────────
+create table if not exists public.config (
+  chave text primary key,
+  valor text not null,
+  publico boolean not null default false
+);
+alter table public.config enable row level security;
+drop policy if exists "config_publica" on public.config;
+create policy "config_publica" on public.config for select to anon, authenticated using (publico);
+drop policy if exists "config_admin" on public.config;
+create policy "config_admin" on public.config for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- ───────────── Storage ─────────────
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('denuncias', 'denuncias', false, 52428800)
+on conflict (id) do update set public = false, file_size_limit = 52428800;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('midia', 'midia', true, 15728640, array['image/jpeg','image/png','image/webp','image/avif','image/gif','application/pdf'])
+on conflict (id) do update set public = true;
+
+-- Denúncias: anônimo só grava .pgp; admin lista, baixa e apaga.
+drop policy if exists "denuncias_insert_anon" on storage.objects;
+create policy "denuncias_insert_anon" on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'denuncias' and name ~ '^[a-z0-9-]{20,64}\.pgp$');
+drop policy if exists "denuncias_admin_read" on storage.objects;
+create policy "denuncias_admin_read" on storage.objects for select to authenticated
+  using (bucket_id = 'denuncias' and public.is_admin());
+drop policy if exists "denuncias_admin_delete" on storage.objects;
+create policy "denuncias_admin_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'denuncias' and public.is_admin());
+
+-- Mídia: leitura pública (bucket público); escrita só admin.
+drop policy if exists "midia_admin_write" on storage.objects;
+create policy "midia_admin_write" on storage.objects for all to authenticated
+  using (bucket_id = 'midia' and public.is_admin()) with check (bucket_id = 'midia' and public.is_admin());
+
+-- ───────────── ADMIN ─────────────
+-- Troque o e-mail e rode depois de criar o usuário em Authentication → Users:
+-- insert into public.admins (user_id) select id from auth.users where email = 'SEU-EMAIL@exemplo.com' on conflict do nothing;

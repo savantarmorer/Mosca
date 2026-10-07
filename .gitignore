@@ -1,1 +1,12 @@
 node_modules/
+# gerados por scripts/build.mjs no deploy
+/index.html
+/sitemap.xml
+/news-sitemap.xml
+/feed.xml
+/politica/
+/economia/
+/plataformas/
+/investigacoes/
+/documentos/
+/assets/tailwind.css

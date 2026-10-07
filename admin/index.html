@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redação | Mosca</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/tailwind.css">
+<link rel="stylesheet" href="/assets/mosca.css">
+<link rel="stylesheet" href="/assets/vendor/quill.snow.css">
+<link rel="stylesheet" href="/assets/admin.css">
+</head>
+<body class="antialiased">
+<header class="border-b fio">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <a href="/" class="display font-black text-3xl">Mosca<span class="text-[color:var(--vinho)]">.</span> <span class="sans text-xs font-semibold uppercase tracking-widest align-middle text-[color:var(--cinza)]">Redação</span></a>
+    <div id="sessao" class="sans text-xs hidden items-center gap-4">
+      <span id="usuario" class="text-[color:var(--cinza)]"></span>
+      <button id="sair" class="btn-link">Sair</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-8">
+
+  <!-- Login -->
+  <section id="tela-login" class="max-w-sm mx-auto py-10 hidden">
+    <h1 class="display font-black text-4xl">Entrar</h1>
+    <form id="form-login" class="mt-6 space-y-4">
+      <label class="campo"><span>E-mail</span><input type="email" name="email" required autocomplete="username"></label>
+      <label class="campo"><span>Senha</span><input type="password" name="senha" required autocomplete="current-password"></label>
+      <button class="btn">Entrar</button>
+      <p id="login-msg" class="sans text-sm text-[color:var(--vinho)]" role="alert"></p>
+    </form>
+  </section>
+
+  <!-- Painel -->
+  <section id="tela-painel" class="hidden">
+    <nav class="sans text-xs font-semibold uppercase tracking-wider border-b fio flex gap-6 mb-6" role="tablist">
+      <button class="aba" data-aba="materias" aria-selected="true">Matérias</button>
+      <button class="aba" data-aba="denuncias">Denúncias</button>
+      <button class="aba" data-aba="config">Configuração</button>
+    </nav>
+
+    <!-- Lista de matérias -->
+    <div id="aba-materias">
+      <div id="lista-materias">
+        <div class="flex items-center justify-between">
+          <h1 class="display font-black text-3xl">Matérias</h1>
+          <button id="nova" class="btn">+ Nova matéria</button>
+        </div>
+        <table class="w-full mt-6 text-sm">
+          <thead class="sans text-[11px] uppercase tracking-wider text-left text-[color:var(--cinza)] border-b fio">
+            <tr><th class="py-2">Título</th><th class="w-28">Status</th><th class="w-36">Data</th><th class="w-40"></th></tr>
+          </thead>
+          <tbody id="tbody-materias"></tbody>
+        </table>
+      </div>
+
+      <!-- Editor -->
+      <form id="editor" class="hidden" autocomplete="off">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b fio pb-4">
+          <button type="button" id="voltar" class="btn-link">← Voltar à lista</button>
+          <div class="flex flex-wrap gap-2">
+            <span id="ed-status" class="sans text-[11px] uppercase tracking-wider self-center mr-2"></span>
+            <button type="button" id="previa" class="btn-sec">Pré-visualizar</button>
+            <button type="submit" data-acao="rascunho" class="btn-sec">Salvar rascunho</button>
+            <button type="submit" data-acao="publicar" class="btn">Publicar</button>
+            <button type="submit" data-acao="despublicar" id="despublicar" class="btn-sec hidden">Despublicar</button>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-[1fr_320px] gap-8 mt-6">
+          <div class="space-y-5 min-w-0">
+            <label class="campo"><span>Chapéu (kicker)</span><input name="kicker" placeholder="Ex.: Plataformas & Poder · Investigação"></label>
+            <label class="campo"><span>Título (H1)</span><textarea name="titulo" rows="2" required class="display !text-2xl font-bold"></textarea></label>
+            <label class="campo"><span>Linha fina</span><textarea name="linha_fina" rows="2"></textarea></label>
+
+            <fieldset>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <legend class="sans text-[11px] font-semibold uppercase tracking-wider">Texto</legend>
+                <div class="sans text-xs flex gap-1" role="radiogroup" aria-label="Formato">
+                  <label class="modo"><input type="radio" name="formato" value="rich" checked><span>Editor visual</span></label>
+                  <label class="modo"><input type="radio" name="formato" value="html"><span>HTML</span></label>
+                  <label class="modo"><input type="radio" name="formato" value="texto"><span>Texto simples</span></label>
+                </div>
+              </div>
+              <div id="box-rich" class="mt-2">
+                <div id="quill" class="corpo"></div>
+                <div class="sans text-xs mt-2 flex flex-wrap gap-3">
+                  <button type="button" id="anexar-doc" class="btn-link">📎 Anexar documento (PDF) ao texto</button>
+                  <button type="button" id="inserir-citacao" class="btn-link">❝ Inserir citação em destaque</button>
+                </div>
+              </div>
+              <textarea id="box-html" class="hidden mono w-full mt-2 border fio p-3 bg-white/50 text-sm" rows="24" spellcheck="false"></textarea>
+              <textarea id="box-texto" class="hidden w-full mt-2 border fio p-3 bg-white/50 text-base leading-relaxed" rows="24" placeholder="Separe parágrafos com uma linha em branco. Links (https://...) viram hiperlinks automaticamente."></textarea>
+            </fieldset>
+          </div>
+
+          <aside class="space-y-5">
+            <div class="painel">
+              <h2>Publicação</h2>
+              <label class="campo"><span>Seção principal</span>
+                <select name="secao">
+                  <option value="politica">Política</option><option value="economia">Economia</option>
+                  <option value="plataformas">Plataformas &amp; Poder</option><option value="investigacoes">Investigações</option>
+                  <option value="documentos">Documentos</option>
+                </select></label>
+              <fieldset class="campo"><span>Também listar em</span>
+                <div class="sans text-xs grid grid-cols-2 gap-1 mt-1" id="secoes-extra">
+                  <label><input type="checkbox" value="politica"> Política</label><label><input type="checkbox" value="economia"> Economia</label>
+                  <label><input type="checkbox" value="plataformas"> Plataformas</label><label><input type="checkbox" value="investigacoes"> Investigações</label>
+                  <label><input type="checkbox" value="documentos"> Documentos</label>
+                </div></fieldset>
+              <label class="campo"><span>Assinatura</span>
+                <select name="assinatura"><option>Redação Mosca</option><option>Investigação Anônima</option></select></label>
+              <label class="campo"><span>Data de publicação</span><input type="datetime-local" name="publicado_em"></label>
+              <label class="sans text-xs flex gap-2 items-center"><input type="checkbox" name="destaque"> Manchete da capa</label>
+            </div>
+
+            <div class="painel">
+              <h2>Imagem de capa</h2>
+              <img id="capa-prev" class="foto w-full hidden" alt="">
+              <input type="file" id="capa-arquivo" accept="image/*" class="sans text-xs">
+              <input type="hidden" name="capa_url">
+              <label class="campo"><span>Texto alternativo (alt)</span><textarea name="capa_alt" rows="3" placeholder="Descreva a imagem para leitores de tela e para o Google"></textarea></label>
+              <label class="campo"><span>Crédito</span><input name="capa_credito" placeholder="Foto: Agência / Fotógrafo"></label>
+              <button type="button" id="capa-remover" class="btn-link sans text-xs">Remover capa</button>
+            </div>
+
+            <div class="painel">
+              <h2>SEO</h2>
+              <label class="campo"><span>Endereço (slug)</span><input name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" class="mono !text-xs"></label>
+              <p class="mono text-[11px] break-all text-[color:var(--cinza)]" id="url-final"></p>
+              <label class="campo"><span>Descrição para o Google <b id="cont-desc"></b></span><textarea name="descricao" rows="3" maxlength="300"></textarea></label>
+              <label class="campo"><span>Palavras-chave (separe por vírgula)</span><input name="palavras_chave"></label>
+              <div class="border fio bg-white p-3 text-sm" aria-label="Prévia no Google">
+                <p class="sans text-[11px] text-[#202124]">mosca.news › <span id="g-secao"></span></p>
+                <p id="g-titulo" class="text-[#1a0dab] text-lg leading-snug"></p>
+                <p id="g-desc" class="sans text-[13px] text-[#4d5156]"></p>
+              </div>
+            </div>
+            <button type="button" id="excluir" class="btn-link sans text-xs text-[color:var(--vinho)]">Excluir matéria</button>
+          </aside>
+        </div>
+      </form>
+    </div>
+
+    <!-- Denúncias -->
+    <div id="aba-denuncias" class="hidden">
+      <h1 class="display font-black text-3xl">Denúncias recebidas</h1>
+      <p class="sans text-sm mt-2 text-[color:var(--cinza)]">O conteúdo só é descriptografado aqui, no seu navegador, com a senha da chave da redação.</p>
+      <ul id="lista-denuncias" class="mt-6 divide-y divide-[#d6d3cc] border-y fio"></ul>
+      <div id="denuncia-aberta" class="hidden mt-8 border fio p-6 bg-white/60"></div>
+    </div>
+
+    <!-- Configuração -->
+    <div id="aba-config" class="hidden space-y-8 max-w-2xl">
+      <section class="painel">
+        <h2>Chave de criptografia das denúncias</h2>
+        <p id="pgp-status" class="text-sm"></p>
+        <div id="pgp-gerar" class="hidden space-y-3">
+          <p class="text-sm">Crie uma senha forte (frase longa). Sem ela, ninguém — nem você — abre as denúncias. Guarde-a fora deste computador.</p>
+          <label class="campo"><span>Senha da chave</span><input type="password" id="pgp-senha1" minlength="12" autocomplete="new-password"></label>
+          <label class="campo"><span>Repita a senha</span><input type="password" id="pgp-senha2" autocomplete="new-password"></label>
+          <button type="button" id="pgp-gerar-btn" class="btn">Gerar chaves e ativar o canal</button>
+        </div>
+        <button type="button" id="pgp-backup" class="btn-sec hidden">Baixar cópia de segurança da chave</button>
+      </section>
+      <section class="painel">
+        <h2>Atualização automática do site</h2>
+        <p class="text-sm">Cole aqui o <b>Build hook</b> do Netlify (Site configuration → Build &amp; deploy → Build hooks). Ao publicar, o site é reconstruído em cerca de 1 minuto.</p>
+        <label class="campo"><span>URL do build hook</span><input id="hook-url" type="url" placeholder="https://api.netlify.com/build_hooks/..."></label>
+        <div class="flex gap-2"><button type="button" id="hook-salvar" class="btn-sec">Salvar</button><button type="button" id="hook-agora" class="btn-sec">Atualizar site agora</button></div>
+      </section>
+    </div>
+  </section>
+
+  <p id="toast" class="sans text-sm fixed bottom-4 right-4 bg-[color:var(--tinta)] text-[color:var(--papel)] px-4 py-3 hidden" role="status"></p>
+</main>
+
+<script src="/assets/vendor/supabase.js"></script>
+<script src="/assets/vendor/quill.js"></script>
+<script type="module" src="/assets/admin.js"></script>
+</body>
+</html>

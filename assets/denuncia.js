@@ -1,15 +1,23 @@
 import * as openpgp from '/assets/vendor/openpgp.min.mjs';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, BUCKET, PGP_PUBLIC_KEY } from '/assets/denuncia-config.js';
+import { SUPABASE_URL, SUPABASE_KEY } from '/assets/config.js';
+
+const BUCKET = 'denuncias';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 const MAX = 40 * 1024 * 1024;
 const form = document.getElementById('form-denuncia');
 const status = document.getElementById('status');
 const say = (msg, erro) => { status.textContent = msg; status.style.color = erro ? 'var(--vinho)' : ''; };
 
-if (!SUPABASE_ANON_KEY || !PGP_PUBLIC_KEY) {
+// A chave pública da redação é publicada pelo painel /admin (tabela config).
+const chavePublica = sb.from('config').select('valor').eq('chave', 'pgp_publica').maybeSingle()
+  .then(({ data }) => data?.valor || null, () => null);
+
+chavePublica.then(k => {
+  if (k) return;
   form.querySelector('button').disabled = true;
   say('Canal em configuração. Volte em breve.', true);
-}
+});
 
 const codigo = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('').match(/.{8}/g).join('-');
 
@@ -39,16 +47,14 @@ form.addEventListener('submit', async (e) => {
     }
     const id = codigo();
     const payload = JSON.stringify({ codigo: id, relato: form.relato.value, anexos });
-    const encryptionKeys = await openpgp.readKey({ armoredKey: PGP_PUBLIC_KEY });
+    const armoredKey = await chavePublica;
+    if (!armoredKey) throw new Error('sem chave');
+    const encryptionKeys = await openpgp.readKey({ armoredKey });
     const cifrado = await openpgp.encrypt({ message: await openpgp.createMessage({ text: payload }), encryptionKeys, format: 'binary' });
 
     say('Enviando…');
-    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${id}.pgp`, {
-      method: 'POST', referrerPolicy: 'no-referrer', credentials: 'omit',
-      headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' },
-      body: cifrado,
-    });
-    if (!r.ok) throw new Error(r.status);
+    const { error } = await sb.storage.from(BUCKET).upload(`${id}.pgp`, new Blob([cifrado]), { contentType: 'application/octet-stream', upsert: false });
+    if (error) throw error;
     form.reset();
     say(`Recebido. Seu código: ${id}. Guarde-o se quiser se referir a este envio no futuro.`);
   } catch (err) {

@@ -17,3 +17,14 @@ a.manchete:hover h2,a.manchete:hover h3{text-decoration:underline;text-decoratio
 .corpo a{color:var(--vinho);text-decoration:underline;text-underline-offset:3px}
 .doc{font-family:'Roboto Mono',monospace;font-size:.72rem;border:1px solid var(--vinho);padding:0 .3rem;margin-left:.2rem;white-space:nowrap}
 .verificar{background:#f1e6c8;font-family:'Roboto Mono',monospace;font-size:.85em;padding:0 .25rem}
+/* elementos vindos do editor */
+.corpo h3{font-family:'Inter',sans-serif;font-size:1.05rem;font-weight:700;margin:1.8em 0 .5em}
+.corpo ul,.corpo ol{margin:0 0 1.35em 1.4em;font-size:1.13rem;line-height:1.75}
+.corpo ul{list-style:disc}.corpo ol{list-style:decimal}
+.corpo li{margin-bottom:.35em}
+.corpo blockquote:not([class]){margin:2.5rem 0;border-left:3px solid var(--vinho);padding-left:1.5rem;font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:1.6rem;line-height:1.35}
+.corpo img{max-width:100%;height:auto;margin:1.5rem 0;filter:grayscale(1) contrast(1.1)}
+.corpo iframe,.corpo .ql-video{width:100%;aspect-ratio:16/9;margin:1.5rem 0;border:0}
+.corpo pre{font-family:'Roboto Mono',monospace;font-size:.85rem;background:#efece6;padding:1rem;overflow-x:auto;margin:0 0 1.35em}
+.corpo .ql-align-center{text-align:center}.corpo .ql-align-right{text-align:right}.corpo .ql-align-justify{text-align:justify}
+.corpo a[href$=".pdf"]::after{content:"PDF";font-family:'Roboto Mono',monospace;font-size:.65rem;border:1px solid var(--vinho);padding:0 .25rem;margin-left:.3rem;vertical-align:middle;text-decoration:none;display:inline-block}

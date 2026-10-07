@@ -2,10 +2,14 @@
   "name": "mosca",
   "private": true,
   "scripts": {
-    "build": "tailwindcss -i src/tailwind.css -o assets/tailwind.css --minify"
+    "build": "node scripts/build.mjs && tailwindcss -i src/tailwind.css -o assets/tailwind.css --minify",
+    "dev": "MOSCA_OFFLINE=1 npm run build && python3 -m http.server 8080"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "openpgp": "^5.11.2",
+    "quill": "^2.0.3",
     "tailwindcss": "3.4.19"
-  }
+  },
+  "type": "module"
 }
