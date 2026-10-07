@@ -31,3 +31,13 @@
   from = "/linha-editorial"
   to = "/linha-editorial/"
   status = 301
+
+[[headers]]
+  for = "/denuncia/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; connect-src 'self' https://pvdznwgrbeuudzhuqicw.supabase.co; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+
+[[headers]]
+  for = "/assets/denuncia-config.js"
+  [headers.values]
+    Cache-Control = "no-cache"

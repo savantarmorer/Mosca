@@ -3,12 +3,11 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Canal anônimo — Envie uma pauta | Mosca</title>
-<meta name="description" content="Envie denúncias, documentos e vazamentos à Mosca sem identificação. Não registramos IP nem dados pessoais.">
+<meta name="description" content="Envie denúncias, documentos e vazamentos à Mosca sem identificação. Conteúdo criptografado no seu aparelho; não pedimos dados pessoais.">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="index,follow">
 <meta property="og:title" content="Canal anônimo da Mosca"><meta property="og:description" content="Envie denúncias e documentos sem identificação."><meta property="og:image" content="https://mosca.news/assets/img/og-default.jpg"><meta property="og:url" content="https://mosca.news/denuncia/"><meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://mosca.news/denuncia/">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lora&family=Playfair+Display:wght@900&family=Roboto+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tailwind.css">
 <meta name="theme-color" content="#F9F8F6">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -21,16 +20,18 @@
   <h1 class="display font-black text-4xl mt-2">Envie uma pauta ou vazamento</h1>
   <ol class="sans text-sm mt-6 space-y-2 border-l-2 border-[color:var(--vinho)] pl-4">
     <li>1. Para máxima proteção, use o <strong>Tor Browser</strong> e uma rede que não seja a do seu trabalho.</li>
-    <li>2. Remova metadados dos arquivos (autor, GPS) antes de enviar.</li>
-    <li>3. Não se identifique. Se quiser retorno, anote o código gerado após o envio.</li>
+    <li>2. Tudo é criptografado no seu aparelho antes de sair dele. Fotos têm os metadados (GPS, modelo do celular) removidos automaticamente; em PDFs e documentos, apague o campo “autor” antes.</li>
+    <li>3. Não se identifique no texto. Após o envio você recebe um código aleatório para referência.</li>
   </ol>
-  <form action="/api/denuncia" method="post" enctype="multipart/form-data" autocomplete="off" class="mt-8 space-y-6">
+  <form id="form-denuncia" autocomplete="off" class="mt-8 space-y-6">
     <label class="block"><span class="sans text-xs font-semibold uppercase tracking-wider">Relato</span>
       <textarea name="relato" required rows="10" class="mt-2 w-full bg-transparent border fio p-3 focus:outline-none focus:border-[color:var(--vinho)]"></textarea></label>
     <label class="block"><span class="sans text-xs font-semibold uppercase tracking-wider">Arquivos (PDF, imagens, áudio)</span>
-      <input type="file" name="arquivos" multiple class="mt-2 block sans text-sm"></label>
+      <input type="file" name="arquivos" multiple accept=".pdf,.txt,.doc,.docx,.xls,.xlsx,.csv,image/*,audio/*" class="mt-2 block sans text-sm"></label>
     <button class="sans text-xs font-semibold uppercase tracking-wider bg-[color:var(--tinta)] text-[color:var(--papel)] px-6 py-3 hover:bg-[color:var(--vinho)]">Enviar com segurança</button>
+    <p id="status" role="status" aria-live="polite" class="sans text-sm"></p>
   </form>
-  <p class="mono text-xs mt-8 text-[color:var(--cinza)]">Sem cookies, sem analytics, sem scripts de terceiros nesta página na versão de produção.</p>
+  <script type="module" src="/assets/denuncia.js"></script>
+  <p class="mono text-xs mt-8 text-[color:var(--cinza)]">Sem cookies, sem analytics, sem fontes ou scripts de terceiros nesta página. Só a redação, com a chave privada, consegue abrir o conteúdo.</p>
 </main>
 </body></html>
