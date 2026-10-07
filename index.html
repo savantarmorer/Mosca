@@ -12,16 +12,18 @@
 <meta property="og:title" content="Mosca — Jornalismo investigativo independente">
 <meta property="og:description" content="Denúncias, análises e documentos sobre poder político e econômico no Brasil.">
 <meta property="og:url" content="https://mosca.news/">
-<meta property="og:image" content="https://mosca.news/assets/img/lula-planalto.webp">
+<meta property="og:image" content="https://mosca.news/assets/img/og-default.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta property="og:locale" content="pt_BR">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="alternate" type="application/rss+xml" title="Mosca" href="/feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Playfair+Display:wght@700;900&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/tailwind.css">
+<meta name="theme-color" content="#F9F8F6">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/assets/mosca.css">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"NewsMediaOrganization","name":"Mosca","url":"https://mosca.news/","logo":{"@type":"ImageObject","url":"https://mosca.news/assets/logo.png"},"publishingPrinciples":"https://mosca.news/linha-editorial","correctionsPolicy":"https://mosca.news/linha-editorial#correcoes","inLanguage":"pt-BR"}
+{"@context":"https://schema.org","@type":"NewsMediaOrganization","name":"Mosca","url":"https://mosca.news/","logo":{"@type":"ImageObject","url":"https://mosca.news/assets/logo.png"},"publishingPrinciples":"https://mosca.news/linha-editorial/","correctionsPolicy":"https://mosca.news/linha-editorial/#correcoes","inLanguage":"pt-BR"}
 </script>
 </head>
 <body class="antialiased">
@@ -65,15 +67,15 @@
     <section aria-labelledby="em-foco" class="mt-10 border-t fio pt-4">
       <h2 id="em-foco" class="sans text-xs font-bold uppercase tracking-[.2em] mb-5">Em Foco</h2>
       <div class="grid md:grid-cols-5 gap-6">
-        <a class="manchete md:col-span-3 md:border-r fio md:pr-6" href="#">
-          <p class="kicker">Economia · Análise</p>
+        <div class="manchete md:col-span-3 md:border-r fio md:pr-6">
+          <p class="kicker">Economia · Análise · Em preparação</p>
           <h3 class="display font-bold text-2xl leading-tight mt-1">Quem financia a moderação: a relação entre anunciantes e as regras de recomendação</h3>
           <p class="mt-2 text-[15px] leading-relaxed">Um mapa dos interesses comerciais por trás de decisões apresentadas como técnicas.</p>
-        </a>
-        <a class="manchete md:col-span-2" href="#">
-          <p class="kicker">Documentos</p>
+        </div>
+        <div class="manchete md:col-span-2">
+          <p class="kicker">Documentos · Em preparação</p>
           <h3 class="display font-bold text-xl leading-tight mt-1">Relatórios de transparência: o que as plataformas publicam — e o que omitem</h3>
-        </a>
+        </div>
       </div>
     </section>
   </article>
@@ -104,7 +106,7 @@
 
 <footer class="max-w-6xl mx-auto px-4 border-t fio fio-duplo py-6 sans text-xs text-[color:var(--cinza)] flex flex-wrap gap-4 justify-between">
   <span>© 2026 Mosca. Jornalismo independente.</span>
-  <nav class="flex gap-4"><a href="/linha-editorial">Linha editorial</a><a href="/linha-editorial#correcoes">Correções</a><a href="/denuncia/">Canal anônimo</a></nav>
+  <nav class="flex gap-4"><a href="/linha-editorial/">Linha editorial</a><a href="/linha-editorial/#correcoes">Correções</a><a href="/denuncia/">Canal anônimo</a></nav>
 </footer>
 </body>
 </html>

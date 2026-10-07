@@ -1,0 +1,6 @@
+{
+  "name": "mosca",
+  "private": true,
+  "scripts": { "build": "tailwindcss -i src/tailwind.css -o assets/tailwind.css --minify" },
+  "devDependencies": { "tailwindcss": "3.4.19" }
+}
