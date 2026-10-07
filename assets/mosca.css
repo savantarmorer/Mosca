@@ -33,3 +33,17 @@ a.manchete:hover h2,a.manchete:hover h3{text-decoration:underline;text-decoratio
 .compartilhar a:hover,.compartilhar button:hover{color:var(--vinho);border-color:var(--vinho)}
 .poema p{font-size:1.2rem;line-height:1.9;margin-bottom:1.6em;text-align:left}
 .poema{max-width:34rem}
+/* menu de seções: uma linha, rolagem lateral no celular */
+.menu{display:flex;gap:1.75rem;overflow-x:auto;white-space:nowrap;scrollbar-width:none;padding-top:.65rem;padding-bottom:.65rem}
+.menu::-webkit-scrollbar{display:none}
+.menu a{flex:none}.menu a:hover{color:var(--vinho)}
+@media (max-width:767px){.menu{justify-content:flex-start!important;mask-image:linear-gradient(90deg,#000 85%,transparent)}.menu-capa{padding-left:1rem;padding-right:1rem;margin:0 -1rem}}
+/* botão único de participação */
+.cta-jornalista{display:inline-flex;align-items:center;gap:.7rem;background:var(--vinho);color:#fff;padding:.7rem 1.1rem .7rem .9rem;text-align:left;border:1px solid var(--vinho);transition:background .15s,color .15s}
+.cta-jornalista:hover{background:var(--papel);color:var(--vinho)}
+.cta-pena{font-size:1.5rem;line-height:1}
+.cta-linha1{display:block;font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:1.05rem;line-height:1.1}
+.cta-linha2{display:block;font-family:'Inter',sans-serif;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.16em;margin-top:.2rem;opacity:.9}
+.cta-compacto{padding:.45rem .8rem .45rem .65rem;gap:.5rem}
+.cta-compacto .cta-pena{font-size:1.1rem}.cta-compacto .cta-linha1{font-size:.85rem}.cta-compacto .cta-linha2{font-size:.58rem}
+@media (max-width:420px){.cta-compacto .cta-linha1{display:none}.cta-compacto .cta-linha2{font-size:.65rem;margin:0}}

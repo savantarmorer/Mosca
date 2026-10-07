@@ -16,7 +16,7 @@ const SECOES = {
   investigacoes: { nome: 'Investigações', desc: 'Reportagens investigativas da Mosca, baseadas em documentos, dados públicos e registros verificáveis.' },
   opiniao: { nome: 'Opinião', desc: 'Editoriais e colunas de opinião do Mosca: análise e posicionamento sobre o poder no Brasil.' },
   charges: { nome: 'Charges', desc: 'A charge do dia e o arquivo de charges do Mosca: humor gráfico sobre política e poder.' },
-  cultura: { nome: 'Arte & Cultura', desc: 'Arte, ilustração, fotografia e ensaios visuais publicados no Mosca, de artistas da redação e leitores.' },
+  cultura: { nome: 'Cultura', desc: 'Arte, ilustração, fotografia, poesia, crônicas e contos publicados no Mosca, de artistas da redação e leitores.' },
   poesia: { nome: 'Poesia', desc: 'Poemas inéditos publicados no Mosca: poesia brasileira contemporânea de autores e leitores.' },
   literatura: { nome: 'Crônicas & Contos', desc: 'Crônicas e contos inéditos publicados no Mosca: literatura brasileira contemporânea.' },
   documentos: { nome: 'Documentos', desc: 'Acervo de documentos-fonte, transcrições e registros usados nas reportagens da Mosca.' },
@@ -110,21 +110,29 @@ ${FONTES}
 const ORG = { '@type': 'NewsMediaOrganization', name: 'Mosca', url: SITE + '/', logo: { '@type': 'ImageObject', url: SITE + '/assets/logo.png', width: 512, height: 512 }, publishingPrinciples: SITE + '/linha-editorial/', correctionsPolicy: SITE + '/linha-editorial/#correcoes', ethicsPolicy: SITE + '/linha-editorial/', foundingDate: '2026', email: EMAIL, contactPoint: { '@type': 'ContactPoint', contactType: 'Redação', email: EMAIL, url: SITE + '/contato/', availableLanguage: 'pt-BR' } };
 const crumbs = list => ({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: list.map(([n, u], i) => ({ '@type': 'ListItem', position: i + 1, name: n, ...(u ? { item: SITE + u } : {}) })) });
 
+// Botão único de participação: o leitor também escreve o jornal.
+const CTA = (cls = '') => `<a href="/colabore/" class="cta-jornalista ${cls}"><span class="cta-pena" aria-hidden="true">✎</span><span><span class="cta-linha1">Aqui você é o jornalista</span><span class="cta-linha2">Publique agora</span></span></a>`;
+const MENU = [['politica', 'Política'], ['economia', 'Economia'], ['plataformas', 'Plataformas'], ['investigacoes', 'Investigações'], ['opiniao', 'Opinião'], ['cultura', 'Cultura'], ['edicoes', 'E-jornal']];
 const TOPO = `<header class="border-b fio">
-  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
     <a href="/" class="display font-black text-3xl">Mosca<span class="text-[color:var(--vinho)]">.</span></a>
-    <a href="/denuncia/" class="sans text-xs font-semibold uppercase tracking-wider text-[color:var(--vinho)]">Envie uma pauta ▸</a>
+    ${CTA('cta-compacto')}
   </div>
+  <nav aria-label="Seções" class="menu max-w-6xl mx-auto px-4 sans text-[11px] font-semibold uppercase tracking-[.14em] border-t border-[#d6d3cc]">
+    ${MENU.map(([s, n]) => `<a href="/${s}/">${n}</a>`).join('')}
+  </nav>
 </header>`;
-const NAV = `<nav aria-label="Seções" class="sans text-xs font-semibold uppercase tracking-wider border-y fio fio-duplo py-2 flex flex-wrap justify-center gap-x-6 gap-y-1">
-    ${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/" class="hover:text-[color:var(--vinho)]">${esc(v.nome)}</a>`).join('\n    ')}
-    <a href="/edicoes/" class="hover:text-[color:var(--vinho)]">E-jornal</a>
-    <a href="/colabore/" class="hover:text-[color:var(--vinho)]">Colabore</a>
-    <a href="/denuncia/" class="text-[color:var(--vinho)]">Envie uma pauta ▸</a>
+const NAV = `<nav aria-label="Seções" class="menu menu-capa sans text-xs font-semibold uppercase tracking-[.14em] border-y fio fio-duplo justify-center">
+    ${MENU.map(([s, n]) => `<a href="/${s}/">${n}</a>`).join('')}
   </nav>`;
-const RODAPE = `<footer class="max-w-6xl mx-auto px-4 border-t fio fio-duplo py-6 sans text-xs text-[color:var(--cinza)] flex flex-wrap gap-4 justify-between">
-  <span>© ${new Date().getFullYear()} Mosca. Jornalismo independente.</span>
-  <nav aria-label="Rodapé" class="flex flex-wrap gap-4">${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/">${esc(v.nome)}</a>`).join('')}<a href="/edicoes/">E-jornal</a><a href="/colabore/">Colabore</a><a href="/quem-somos/">Quem somos</a><a href="/linha-editorial/">Linha editorial</a><a href="/contato/">Contato</a><a href="/denuncia/">Canal anônimo</a><a href="/termos/">Termos</a><a href="/privacidade/">Privacidade</a><a href="/feed.xml">RSS</a></nav>
+const RODAPE = `<footer class="max-w-6xl mx-auto px-4 border-t fio fio-duplo pt-8 pb-6 sans text-xs text-[color:var(--cinza)]">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <div><p class="display font-black text-2xl text-[color:var(--tinta)]">Mosca<span class="text-[color:var(--vinho)]">.</span></p><p class="mt-2 leading-relaxed">Jornalismo independente, sem dono e sem patrocinador.</p></div>
+    <nav aria-label="Seções" class="flex flex-col gap-2">${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/">${esc(v.nome)}</a>`).join('')}</nav>
+    <nav aria-label="Participe" class="flex flex-col gap-2"><a href="/colabore/" class="text-[color:var(--vinho)] font-semibold">Publique no Mosca</a><a href="/denuncia/">Denúncia anônima</a><a href="/edicoes/">E-jornal</a><a href="/feed.xml">RSS</a></nav>
+    <nav aria-label="Institucional" class="flex flex-col gap-2"><a href="/quem-somos/">Quem somos</a><a href="/linha-editorial/">Linha editorial</a><a href="/contato/">Contato</a><a href="/termos/">Termos</a><a href="/privacidade/">Privacidade</a></nav>
+  </div>
+  <p class="mt-8 border-t border-[#d6d3cc] pt-4">© ${new Date().getFullYear()} Mosca. Jornalismo independente.</p>
 </footer>
 </body>
 </html>
@@ -311,10 +319,14 @@ function capa(posts, edicoes, ej) {
   <div class="sans text-[11px] uppercase tracking-widest flex justify-between gap-4 py-2 border-b fio text-[color:var(--cinza)]">
     <span>${dataLonga(agora)}</span><span class="hidden sm:inline">${ed ? `Ano ${anoRomano(agora)} · Nº ${ed.numero} · ` : ''}Brasília</span>
   </div>
-  <div class="py-6 text-center">
-    <a href="/" class="display font-black text-6xl md:text-7xl tracking-tight">Mosca<span class="text-[color:var(--vinho)]">.</span></a>
-    <h1 class="sr-only">Mosca — Jornalismo investigativo independente</h1>
-    <p class="italic text-sm mt-1 text-[color:var(--cinza)]">O incômodo necessário. Jornalismo independente, sem dono e sem patrocinador.</p>
+  <div class="py-6 grid md:grid-cols-[1fr_auto_1fr] items-center gap-4 text-center">
+    <p class="hidden md:block text-left sans text-[11px] uppercase tracking-wider text-[color:var(--cinza)] leading-relaxed">Tem documentos?<br><a href="/denuncia/" class="text-[color:var(--vinho)] font-semibold hover:underline">Denúncia anônima ▸</a></p>
+    <div>
+      <a href="/" class="display font-black text-6xl md:text-7xl tracking-tight">Mosca<span class="text-[color:var(--vinho)]">.</span></a>
+      <h1 class="sr-only">Mosca — Jornalismo investigativo independente</h1>
+      <p class="italic text-sm mt-1 text-[color:var(--cinza)]">O incômodo necessário. Jornalismo independente, sem dono e sem patrocinador.</p>
+    </div>
+    <div class="flex justify-center md:justify-end">${CTA()}</div>
   </div>
   ${NAV}
 </header>
@@ -386,7 +398,7 @@ ${RODAPE}`;
 // ───────── seção ─────────
 function secao(slug, posts) {
   const s = SECOES[slug];
-  const lista = posts.filter(p => p.secao === slug || (p.secoes_extra || []).includes(slug));
+  const lista = posts.filter(p => p.secao === slug || (p.secoes_extra || []).includes(slug) || (slug === 'cultura' && CULTURA.has(p.tipo)));
   const ld = [crumbs([['Início', '/'], [s.nome, null]])];
   if (lista.length) ld.push({ '@context': 'https://schema.org', '@type': 'ItemList', itemListElement: lista.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: SITE + url(p) })) });
   return [lista.length, head({ titulo: `${s.nome} | Mosca`, desc: s.desc, caminho: `/${slug}/`, index: lista.length > 0, ld }) + `
