@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escreva para o Mosca: envie opinião, poesia, crônica ou arte | Mosca</title>
+<meta name="description" content="Publique no Mosca: envie seu artigo de opinião, poesia, crônica, conto, ilustração ou fotografia. Os textos aprovados pela redação entram na edição do dia.">
+<link rel="canonical" href="https://mosca.news/colabore/">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#F9F8F6">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:site_name" content="Mosca"><meta property="og:locale" content="pt_BR"><meta property="og:type" content="website">
+<meta property="og:title" content="Escreva para o Mosca"><meta property="og:description" content="Envie seu artigo de opinião, poesia, crônica ou arte. Os aprovados entram na edição do dia."><meta property="og:url" content="https://mosca.news/colabore/">
+<meta property="og:image" content="https://mosca.news/assets/img/og-default.jpg"><meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/assets/fonts/playfair-display-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/tailwind.css">
+<link rel="stylesheet" href="/assets/mosca.css">
+<link rel="stylesheet" href="/assets/admin.css">
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"WebPage","name":"Escreva para o Mosca","url":"https://mosca.news/colabore/","inLanguage":"pt-BR","isPartOf":{"@type":"WebSite","name":"Mosca","url":"https://mosca.news/"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Início","item":"https://mosca.news/"},{"@type":"ListItem","position":2,"name":"Colabore"}]}]</script>
+</head>
+<body class="antialiased">
+<header class="border-b fio"><div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"><a href="/" class="display font-black text-3xl">Mosca<span class="text-[color:var(--vinho)]">.</span></a><a href="/denuncia/" class="sans text-xs font-semibold uppercase tracking-wider text-[color:var(--vinho)]">Envie uma denúncia ▸</a></div></header>
+<main class="max-w-[720px] mx-auto px-4 py-10">
+  <nav aria-label="Trilha" class="sans text-[11px] uppercase tracking-wider text-[color:var(--cinza)]"><a href="/">Início</a> / <span>Colabore</span></nav>
+  <p class="kicker mt-4">Colabore</p>
+  <h1 class="display font-black text-4xl md:text-5xl leading-tight mt-2">Escreva para o Mosca</h1>
+  <p class="text-lg leading-relaxed mt-4">Artigos de opinião, poesia, crônicas, contos, ilustrações e fotografias. A redação lê tudo; os trabalhos aprovados são publicados com a sua assinatura e entram na edição do dia do <a href="/edicoes/" class="underline">e-jornal</a>.</p>
+  <ul class="sans text-sm mt-6 space-y-2 border-l-2 border-[color:var(--vinho)] pl-4">
+    <li><b>Opinião:</b> até 6.000 caracteres, com argumentos e, quando houver dados, a fonte.</li>
+    <li><b>Poesia, crônica e conto:</b> textos inéditos; a quebra de versos é mantida como você escrever.</li>
+    <li><b>Arte e fotografia:</b> até 8 imagens (JPG, PNG ou WebP, 10 MB cada), de autoria sua.</li>
+    <li>Para denúncias e documentos sigilosos, use o <a href="/denuncia/" class="underline">canal anônimo</a>, não este formulário.</li>
+  </ul>
+
+  <form id="form-colab" class="mt-10 space-y-6" autocomplete="on" novalidate>
+    <fieldset class="campo"><span>O que você está enviando?</span>
+      <div class="sans text-sm flex flex-wrap gap-2 mt-1" id="tipos">
+        <label class="modo"><input type="radio" name="tipo" value="opiniao" required checked><span>Opinião</span></label>
+        <label class="modo"><input type="radio" name="tipo" value="poesia"><span>Poesia</span></label>
+        <label class="modo"><input type="radio" name="tipo" value="cronica"><span>Crônica / conto</span></label>
+        <label class="modo"><input type="radio" name="tipo" value="arte"><span>Arte / ilustração</span></label>
+        <label class="modo"><input type="radio" name="tipo" value="fotografia"><span>Fotografia</span></label>
+      </div></fieldset>
+    <label class="campo"><span>Título</span><input name="titulo" required minlength="2" maxlength="200"></label>
+    <label class="campo"><span id="rotulo-texto">Texto</span><textarea name="texto" rows="16" maxlength="40000" class="leading-relaxed"></textarea>
+      <small class="sans text-xs text-[color:var(--cinza)]" id="cont-texto"></small></label>
+    <label class="campo" id="campo-imagens"><span>Imagens <small class="normal-case tracking-normal font-normal" id="obrig-img"></small></span><input type="file" name="imagens" accept="image/jpeg,image/png,image/webp" multiple class="sans text-sm"></label>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <label class="campo"><span>Assinatura (nome ou pseudônimo)</span><input name="assinatura" required minlength="2" maxlength="80" autocomplete="name"></label>
+      <label class="campo"><span>E-mail para contato (opcional, não é publicado)</span><input name="contato" type="email" maxlength="200" autocomplete="email"></label>
+    </div>
+    <label class="campo"><span>Minibiografia (opcional, aparece no fim do texto)</span><textarea name="minibio" rows="2" maxlength="300" placeholder="Ex.: Professora de história em Recife, escreve sobre memória e cidade."></textarea></label>
+    <label class="sans hidden" aria-hidden="true">Não preencha<input name="site" tabindex="-1" autocomplete="off"></label>
+    <label class="sans text-sm flex gap-2 items-start"><input type="checkbox" name="aceite" required class="mt-1">
+      <span>Declaro que o trabalho é de minha autoria e autorizo o Mosca a publicá-lo, sem exclusividade, conforme os <a href="/termos/#colaboracoes" class="underline" target="_blank">termos de colaboração</a>. Os direitos autorais continuam meus.</span></label>
+    <button class="btn">Enviar para a redação</button>
+    <p id="status" role="status" aria-live="polite" class="sans text-sm"></p>
+  </form>
+</main>
+<footer class="max-w-6xl mx-auto px-4 border-t fio fio-duplo py-6 sans text-xs text-[color:var(--cinza)] flex flex-wrap gap-4 justify-between"><span>© 2026 Mosca. Jornalismo independente.</span><nav class="flex flex-wrap gap-4"><a href="/quem-somos/">Quem somos</a><a href="/termos/">Termos</a><a href="/privacidade/">Privacidade</a></nav></footer>
+<script src="/assets/vendor/supabase.js"></script>
+<script type="module" src="/assets/colabore.js"></script>
+</body>
+</html>

@@ -5,8 +5,8 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = (s = '') => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const SECAO_DO_TIPO = { opiniao: 'opiniao', editorial: 'opiniao', charge: 'charges', arte: 'cultura' };
-const SECOES = { politica: 'Política', economia: 'Economia', plataformas: 'Plataformas & Poder', investigacoes: 'Investigações', documentos: 'Documentos', opiniao: 'Opinião', charges: 'Charges', cultura: 'Arte & Cultura' };
+const SECAO_DO_TIPO = { opiniao: 'opiniao', editorial: 'opiniao', charge: 'charges', arte: 'cultura', poesia: 'poesia', cronica: 'literatura' };
+const SECOES = { politica: 'Política', economia: 'Economia', plataformas: 'Plataformas & Poder', investigacoes: 'Investigações', documentos: 'Documentos', opiniao: 'Opinião', charges: 'Charges', cultura: 'Arte & Cultura', poesia: 'Poesia', literatura: 'Crônicas & Contos' };
 
 let toastT;
 function toast(msg, erro) {
@@ -30,6 +30,7 @@ async function iniciar() {
   $('#tela-login').classList.add('hidden');
   $('#tela-painel').classList.remove('hidden');
   abrirAba(location.hash.slice(1) || 'materias');
+  contarPendentes();
 }
 function mostrarLogin(msg = '') {
   $('#tela-painel').classList.add('hidden');
@@ -50,11 +51,11 @@ $('#sair').addEventListener('click', async () => { await sb.auth.signOut(); chav
 
 // ───────── abas ─────────
 function abrirAba(nome) {
-  if (!['materias', 'ejornal', 'denuncias', 'config'].includes(nome)) nome = 'materias';
+  if (!['materias', 'colaboracoes', 'ejornal', 'denuncias', 'config'].includes(nome)) nome = 'materias';
   $$('.aba').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === nome));
-  ['materias', 'ejornal', 'denuncias', 'config'].forEach(a => $(`#aba-${a}`).classList.toggle('hidden', a !== nome));
+  ['materias', 'colaboracoes', 'ejornal', 'denuncias', 'config'].forEach(a => $(`#aba-${a}`).classList.toggle('hidden', a !== nome));
   history.replaceState(null, '', '#' + nome);
-  ({ materias: listarMaterias, ejornal: carregarEjornal, denuncias: listarDenuncias, config: carregarConfig })[nome]();
+  ({ materias: listarMaterias, colaboracoes: listarColaboracoes, ejornal: carregarEjornal, denuncias: listarDenuncias, config: carregarConfig })[nome]();
 }
 $$('.aba').forEach(b => b.addEventListener('click', () => abrirAba(b.dataset.aba)));
 
@@ -201,7 +202,7 @@ async function abrirEditor(id) {
   }
   atual = p; slugManual = !!id;
   form.reset();
-  for (const k of ['kicker', 'titulo', 'linha_fina', 'secao', 'assinatura', 'capa_alt', 'capa_credito', 'slug', 'descricao', 'colunista']) form[k].value = p[k] || '';
+  for (const k of ['kicker', 'titulo', 'linha_fina', 'secao', 'assinatura', 'capa_alt', 'capa_credito', 'slug', 'descricao', 'colunista', 'autor_bio']) form[k].value = p[k] || '';
   form.tipo.value = p.tipo || 'reportagem';
   if (!form.secao.value) form.secao.value = 'politica';
   galeriaAtual = Array.isArray(p.galeria) ? p.galeria.map(g => ({ ...g })) : [];
@@ -240,6 +241,7 @@ function coletar(status) {
     capa_credito: form.capa_credito.value.trim() || null,
     tipo: form.tipo.value,
     colunista: form.colunista.value.trim() || null,
+    autor_bio: form.autor_bio.value.trim() || null,
     galeria: galeriaAtual.filter(g => g.url),
     formato: formatoAtual,
     conteudo: lerConteudo(),
@@ -258,6 +260,7 @@ form.addEventListener('submit', async e => {
   if (status === 'publicado') {
     const faltando = [
       !dados.conteudo && !['charge', 'arte'].includes(dados.tipo) && 'texto',
+      ['poesia', 'cronica'].includes(dados.tipo) && !dados.colunista && 'nome do autor',
       dados.tipo === 'charge' && !dados.capa_url && 'imagem da charge',
       dados.tipo === 'opiniao' && !dados.colunista && 'nome do colunista',
       dados.capa_url && !dados.capa_alt && 'texto alternativo da imagem',
@@ -310,8 +313,10 @@ let galeriaAtual = [];
 function ajustarTipo() {
   const t = form.tipo.value;
   const fixa = SECAO_DO_TIPO[t];
-  $('#campo-colunista').classList.toggle('hidden', !['opiniao', 'charge', 'arte'].includes(t));
-  $('#rotulo-colunista').textContent = t === 'charge' ? 'Chargista' : t === 'arte' ? 'Artista / autor (opcional)' : 'Colunista';
+  const autoral = ['opiniao', 'charge', 'arte', 'poesia', 'cronica'].includes(t);
+  $('#campo-colunista').classList.toggle('hidden', !autoral);
+  $('#campo-bio').classList.toggle('hidden', !autoral);
+  $('#rotulo-colunista').textContent = t === 'charge' ? 'Chargista' : t === 'arte' ? 'Artista / autor' : t === 'opiniao' ? 'Colunista' : 'Autor(a)';
   $('#campo-secao').classList.toggle('hidden', !!fixa);
   $('#campo-extra').classList.toggle('hidden', !!fixa);
   $('#painel-galeria').classList.toggle('hidden', t !== 'arte');
@@ -345,7 +350,7 @@ $('#galeria-arquivos').addEventListener('change', async e => {
 });
 
 // ───────── e-jornal ─────────
-const ROTULO_TIPO = { reportagem: 'Reportagem', opiniao: 'Opinião', editorial: 'Editorial', charge: 'Charge', arte: 'Arte' };
+const ROTULO_TIPO = { reportagem: 'Reportagem', opiniao: 'Opinião', editorial: 'Editorial', charge: 'Charge', arte: 'Arte', poesia: 'Poesia', cronica: 'Crônica', fotografia: 'Fotografia' };
 const hojeSP = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
 let ej = { data: null, itens: [], manchete: null, registro: null, catalogo: [] };
 
@@ -360,7 +365,7 @@ async function carregarEjornal() {
   ]);
   if (e1 || e2) return falha(e1 || e2, 'Erro ao carregar a edição (rode o schema.sql atualizado)');
   const porSlug = new Map([...(catalogo || []), ...doDia].map(p => [p.slug, p]));
-  const ordem = { reportagem: 0, editorial: 1, opiniao: 2, charge: 3, arte: 4 };
+  const ordem = { reportagem: 0, editorial: 1, opiniao: 2, charge: 3, arte: 4, cronica: 5, poesia: 6 };
   ej = { data, registro: reg, catalogo: catalogo || [],
     itens: reg?.itens?.length ? reg.itens.map(s => porSlug.get(s) || { slug: s, titulo: s + ' (não publicada ou do repositório)', tipo: 'reportagem' })
       : [...doDia].sort((a, b) => (ordem[a.tipo] - ordem[b.tipo]) || (b.destaque - a.destaque)),
@@ -410,6 +415,107 @@ $('#ej-auto').addEventListener('click', async () => {
   if (error) return falha(error, 'Erro');
   await atualizarSite(); carregarEjornal();
 });
+
+// ───────── colaborações de leitores ─────────
+let colabs = [];
+async function contarPendentes() {
+  const { count } = await sb.from('colaboracoes').select('id', { count: 'exact', head: true }).eq('status', 'pendente');
+  $('#badge-colab').textContent = count || '';
+  $('#badge-colab').classList.toggle('hidden', !count);
+}
+async function listarColaboracoes() {
+  $('#colab-aberta').classList.add('hidden');
+  const { data, error } = await sb.from('colaboracoes').select('*').eq('status', $('#colab-filtro').value).order('criado_em', { ascending: false }).limit(200);
+  if (error) return falha(error, 'Erro ao carregar colaborações (rode o schema.sql atualizado)');
+  colabs = data;
+  $('#colab-lista').innerHTML = data.length ? data.map((c, i) => `<li><button class="w-full text-left py-3 hover:bg-white/60 px-2" data-colab="${i}">
+    <span class="kicker">${ROTULO_TIPO[c.tipo]}</span> <span class="sans text-[11px] text-[color:var(--cinza)]">${new Date(c.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+    <span class="block display font-bold leading-snug">${esc(c.titulo)}</span><span class="sans text-xs text-[color:var(--cinza)]">${esc(c.assinatura)}${c.imagens.length ? ` · ${c.imagens.length} imagem(ns)` : ''}</span></button></li>`).join('')
+    : '<li class="py-4 italic text-[color:var(--cinza)]">Nada por aqui.</li>';
+  contarPendentes();
+}
+$('#colab-filtro').addEventListener('change', listarColaboracoes);
+$('#colab-lista').addEventListener('click', e => { const b = e.target.closest('[data-colab]'); if (b) abrirColaboracao(colabs[b.dataset.colab]); });
+
+async function abrirColaboracao(c) {
+  const box = $('#colab-aberta');
+  const urls = c.imagens.length ? (await sb.storage.from('colaboracoes').createSignedUrls(c.imagens, 3600)).data || [] : [];
+  box.innerHTML = `<p class="kicker">${ROTULO_TIPO[c.tipo]} · ${c.status}</p>
+    <h2 class="display font-black text-3xl leading-tight mt-1">${esc(c.titulo)}</h2>
+    <p class="sans text-sm mt-2"><b>${esc(c.assinatura)}</b>${c.contato ? ` · <a class="underline" href="mailto:${esc(c.contato)}">${esc(c.contato)}</a>` : ' · sem contato'}</p>
+    ${c.minibio ? `<p class="text-sm italic mt-1">${esc(c.minibio)}</p>` : ''}
+    ${urls.length ? `<div class="grid grid-cols-2 gap-3 mt-4">${urls.map(u => `<a href="${esc(u.signedUrl)}" target="_blank"><img src="${esc(u.signedUrl)}" alt="" class="w-full border fio"></a>`).join('')}</div>` : ''}
+    <div class="mt-5 whitespace-pre-wrap leading-relaxed ${c.tipo === 'poesia' ? 'italic' : ''}">${esc(c.texto)}</div>
+    ${c.status === 'pendente' ? `<div class="border-t fio mt-6 pt-4 space-y-3">
+      ${['arte', 'fotografia'].includes(c.tipo) ? `<label class="campo"><span>Texto alternativo das imagens (obrigatório para publicar)</span><textarea id="colab-alt" rows="2" placeholder="Descreva o que a imagem mostra"></textarea></label>` : ''}
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="btn" data-acao-colab="publicar">Aprovar e publicar</button>
+        <button type="button" class="btn-sec" data-acao-colab="editar">Aprovar e editar antes</button>
+        <button type="button" class="btn-sec" data-acao-colab="recusar">Recusar</button>
+      </div></div>` : c.post_id ? `<button type="button" class="btn-link sans text-xs mt-6" data-editar-post="${c.post_id}">Abrir matéria publicada no editor</button>` : ''}
+    <button type="button" class="btn-link sans text-xs text-[color:var(--vinho)] mt-4 block" data-acao-colab="excluir">Excluir definitivamente</button>`;
+  box.classList.remove('hidden');
+  box.querySelectorAll('[data-acao-colab]').forEach(b => b.addEventListener('click', () => acaoColaboracao(c, b.dataset.acaoColab, b)));
+  box.querySelector('[data-editar-post]')?.addEventListener('click', () => { abrirAba('materias'); abrirEditor(c.post_id); });
+}
+
+const TIPO_POST = { opiniao: 'opiniao', poesia: 'poesia', cronica: 'cronica', arte: 'arte', fotografia: 'arte' };
+async function acaoColaboracao(c, acao, btn) {
+  if (acao === 'excluir') {
+    if (!confirm('Excluir esta colaboração e as imagens enviadas?')) return;
+    if (c.imagens.length) await sb.storage.from('colaboracoes').remove(c.imagens);
+    const { error } = await sb.from('colaboracoes').delete().eq('id', c.id);
+    return error ? falha(error, 'Erro ao excluir') : listarColaboracoes();
+  }
+  if (acao === 'recusar') {
+    const { error } = await sb.from('colaboracoes').update({ status: 'recusada' }).eq('id', c.id);
+    return error ? falha(error, 'Erro') : (toast('Colaboração recusada.'), listarColaboracoes());
+  }
+  const alt = $('#colab-alt')?.value.trim() || '';
+  if (['arte', 'fotografia'].includes(c.tipo) && acao === 'publicar' && !alt) return toast('Escreva o texto alternativo das imagens antes de publicar.', true);
+  btn.disabled = true;
+  try {
+    // copia as imagens para o acervo público (midia)
+    const imgs = [];
+    for (const nome of c.imagens) {
+      const { data: blob, error } = await sb.storage.from('colaboracoes').download(nome);
+      if (error) throw error;
+      imgs.push(await enviarMidia(new File([blob], `${slugify(c.titulo)}.jpg`, { type: 'image/jpeg' })));
+    }
+    const visual = ['arte', 'fotografia'].includes(c.tipo);
+    const tipo = TIPO_POST[c.tipo];
+    const texto = c.texto.trim();
+    const resumo = texto.replace(/\s+/g, ' ').slice(0, 150);
+    const publicar = acao === 'publicar';
+    const capa = tipo === 'poesia' ? null : imgs[0] || null;
+    const agora = new Date().toISOString();
+    const post = {
+      tipo, secao: SECAO_DO_TIPO[tipo], titulo: c.titulo, slug: `${slugify(c.titulo)}-${c.id.slice(0, 4)}`,
+      colunista: c.assinatura, autor_bio: c.minibio, assinatura: 'Redação Mosca',
+      formato: 'texto', conteudo: texto,
+      capa_url: capa,
+      capa_alt: capa ? (alt || null) : null,
+      galeria: (capa ? imgs.slice(1) : imgs).map(url => ({ url, alt: alt || '', legenda: '' })),
+      descricao: (tipo === 'poesia' ? `Poema de ${c.assinatura}: ${resumo}` : visual ? `${c.titulo}, por ${c.assinatura}. ${resumo}` : resumo).slice(0, 158) + (resumo.length >= 150 ? '…' : ''),
+      palavras_chave: [{ opiniao: 'opinião', poesia: 'poesia', cronica: 'crônica', arte: 'arte', fotografia: 'fotografia' }[c.tipo], c.assinatura],
+      status: publicar ? 'publicado' : 'rascunho', publicado_em: publicar ? agora : null, atualizado_em: agora,
+    };
+    const { data: novo, error } = await sb.from('posts').insert(post).select().single();
+    if (error) throw error;
+    await sb.from('colaboracoes').update({ status: 'aprovada', post_id: novo.id }).eq('id', c.id);
+    if (publicar) {
+      // se a edição de hoje foi personalizada no painel, inclui a colaboração nela também
+      const { data: ed } = await sb.from('edicoes').select('itens').eq('data', hojeSP()).maybeSingle();
+      if (ed && !ed.itens.includes(novo.slug)) await sb.from('edicoes').update({ itens: [...ed.itens, novo.slug] }).eq('data', hojeSP());
+      await atualizarSite();
+      listarColaboracoes();
+    } else {
+      toast('Aprovada como rascunho. Revise e publique no editor.');
+      abrirAba('materias'); abrirEditor(novo.id);
+    }
+  } catch (e) { falha(e, 'Não foi possível aprovar'); }
+  btn.disabled = false;
+}
 
 // ───────── denúncias ─────────
 let chavePrivada = null;

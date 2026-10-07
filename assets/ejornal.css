@@ -108,3 +108,7 @@ a:hover .ej-mini .folha{transform:translateY(-3px)}
   .folha::after{display:none}
   .ej-c3{column-count:3}
 }
+.ej-poema .ej-colunas{text-align:left;hyphens:manual;font-style:italic}
+.ej-poema .ej-colunas p{margin-bottom:1.2em}
+.ej-poema .ej-colunas{font-size:2.3cqw;line-height:1.6;padding:2cqw 0 0 12cqw;-webkit-mask-image:none;mask-image:none}
+.ej-poema .ej-h-materia{font-size:5.2cqw;text-align:left}

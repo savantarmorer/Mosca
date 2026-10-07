@@ -1,1 +1,1 @@
-module.exports = { content: ['./*.html', './{admin,denuncia,edicao,edicoes,opiniao,charges,cultura,linha-editorial,quem-somos,contato,termos,privacidade,tema,politica,economia,plataformas,investigacoes,documentos}/**/*.html', './scripts/*.mjs', './assets/admin.js'] };
+module.exports = { content: ['./*.html', './{admin,denuncia,colabore,autor,poesia,literatura,edicao,edicoes,opiniao,charges,cultura,linha-editorial,quem-somos,contato,termos,privacidade,tema,politica,economia,plataformas,investigacoes,documentos}/**/*.html', './scripts/*.mjs', './assets/admin.js'] };

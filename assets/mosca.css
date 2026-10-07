@@ -31,3 +31,5 @@ a.manchete:hover h2,a.manchete:hover h3{text-decoration:underline;text-decoratio
 .sem-capitular p:first-of-type::first-letter{all:unset}
 .compartilhar a,.compartilhar button{border-bottom:1px solid transparent;text-transform:inherit;letter-spacing:inherit}
 .compartilhar a:hover,.compartilhar button:hover{color:var(--vinho);border-color:var(--vinho)}
+.poema p{font-size:1.2rem;line-height:1.9;margin-bottom:1.6em;text-align:left}
+.poema{max-width:34rem}

@@ -48,11 +48,45 @@ create policy "posts_admin" on public.posts for all to authenticated using (publ
 alter table public.posts add column if not exists tipo text not null default 'reportagem';
 alter table public.posts add column if not exists colunista text;
 alter table public.posts add column if not exists galeria jsonb not null default '[]';
+alter table public.posts add column if not exists autor_bio text;
 alter table public.posts drop constraint if exists posts_tipo_check;
-alter table public.posts add constraint posts_tipo_check check (tipo in ('reportagem','opiniao','editorial','charge','arte'));
+alter table public.posts add constraint posts_tipo_check check (tipo in ('reportagem','opiniao','editorial','charge','arte','poesia','cronica'));
 alter table public.posts drop constraint if exists posts_secao_check;
 alter table public.posts add constraint posts_secao_check
-  check (secao in ('politica','economia','plataformas','investigacoes','documentos','opiniao','charges','cultura'));
+  check (secao in ('politica','economia','plataformas','investigacoes','documentos','opiniao','charges','cultura','poesia','literatura'));
+
+-- ───────────── Colaborações de leitores (opinião, poesia, crônica, arte, fotografia) ─────────────
+-- O público só consegue INSERIR (status pendente). Ler, aprovar e apagar: só administradores.
+create table if not exists public.colaboracoes (
+  id uuid primary key default gen_random_uuid(),
+  tipo text not null check (tipo in ('opiniao','poesia','cronica','arte','fotografia')),
+  titulo text not null check (char_length(titulo) between 2 and 200),
+  texto text not null default '' check (char_length(texto) <= 40000),
+  assinatura text not null check (char_length(assinatura) between 2 and 80),
+  minibio text check (char_length(minibio) <= 300),
+  contato text check (char_length(contato) <= 200),
+  imagens jsonb not null default '[]',
+  aceite boolean not null check (aceite),
+  status text not null default 'pendente' check (status in ('pendente','aprovada','recusada')),
+  post_id uuid references public.posts(id) on delete set null,
+  criado_em timestamptz not null default now()
+);
+alter table public.colaboracoes enable row level security;
+drop policy if exists "colab_envio_publico" on public.colaboracoes;
+create policy "colab_envio_publico" on public.colaboracoes for insert to anon, authenticated
+  with check (status = 'pendente' and post_id is null and jsonb_array_length(imagens) <= 8);
+drop policy if exists "colab_admin" on public.colaboracoes;
+create policy "colab_admin" on public.colaboracoes for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('colaboracoes', 'colaboracoes', false, 10485760, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do update set public = false, file_size_limit = 10485760, allowed_mime_types = array['image/jpeg','image/png','image/webp'];
+drop policy if exists "colab_upload_publico" on storage.objects;
+create policy "colab_upload_publico" on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'colaboracoes' and name ~ '^[a-f0-9-]{36}/[0-9]{1,2}\.(jpg|png|webp)$');
+drop policy if exists "colab_admin_arquivos" on storage.objects;
+create policy "colab_admin_arquivos" on storage.objects for all to authenticated
+  using (bucket_id = 'colaboracoes' and public.is_admin()) with check (bucket_id = 'colaboracoes' and public.is_admin());
 
 -- ───────────── E-jornal (edições diárias) ─────────────
 -- Sem registro para um dia, o site monta a edição sozinho com as matérias daquele dia.

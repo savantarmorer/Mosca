@@ -15,7 +15,7 @@ export function montarEdicoes(posts, personalizadas) {
     dias.get(d).push(p);
   }
   for (const e of personalizadas) if (!dias.has(e.data)) dias.set(e.data, []);
-  const ordemTipo = { reportagem: 0, editorial: 1, opiniao: 2, charge: 3, arte: 4 };
+  const ordemTipo = { reportagem: 0, editorial: 1, opiniao: 2, charge: 3, arte: 4, cronica: 5, poesia: 6 };
   return [...dias.keys()].sort().map((data, i) => {
     const pers = personalizadas.find(e => e.data === data);
     let itens, manchete;
@@ -37,7 +37,8 @@ export function criarEjornal(h) {
 
   // Corta o texto em parágrafos simples até o limite de palavras (sem quebrar HTML).
   function trecho(p, limite) {
-    const blocos = corpoHtml(p).split(/<\/(?:p|h2|h3|li|blockquote)>/i).map(textoPuro).filter(Boolean);
+    const html = p.tipo === 'poesia' ? corpoHtml(p).replace(/<br\s*\/?>/gi, ' \u23CE ') : corpoHtml(p);
+    const blocos = html.split(/<\/(?:p|h2|h3|li|blockquote)>/i).map(textoPuro).filter(Boolean);
     const saida = []; let n = 0, cortado = false;
     for (const b of blocos) {
       const palavras = b.split(' ');
@@ -48,7 +49,7 @@ export function criarEjornal(h) {
       }
       saida.push(b); n += palavras.length;
     }
-    return { html: saida.map(t => `<p>${esc(t)}</p>`).join(''), cortado };
+    return { html: saida.map(t => `<p>${esc(t).replace(/\s*\u23CE\s*/g, '<br>')}</p>`).join(''), cortado };
   }
   const foto = (p, cls = '') => p.capa_url ? `<figure class="ej-foto ${cls}"><img src="${esc(p._img?.src || p.capa_url)}" alt="${esc(p.capa_alt || '')}" loading="lazy" decoding="async">${p.capa_credito ? `<figcaption>${esc(p.capa_credito)}</figcaption>` : ''}</figure>` : '';
   const chapeu = p => esc(p.kicker || SECOES[p.secao]?.nome || '');
@@ -63,7 +64,7 @@ export function criarEjornal(h) {
     const pags = [{ tipo: 'capa', itens: [ed.manchete] }];
     const rep = ed.itens.filter(p => p.tipo === 'reportagem');
     const opi = ed.itens.filter(p => ['editorial', 'opiniao', 'charge'].includes(p.tipo));
-    const arte = ed.itens.filter(p => p.tipo === 'arte');
+    const arte = ed.itens.filter(p => ['arte', 'poesia', 'cronica'].includes(p.tipo));
     for (const p of rep) pags.push({ tipo: 'materia', itens: [p] });
     if (opi.length) pags.push({ tipo: 'opiniao', itens: opi });
     for (let i = 0; i < arte.length; i += 2) pags.push({ tipo: 'cultura', itens: arte.slice(i, i + 2) });
@@ -135,13 +136,13 @@ export function criarEjornal(h) {
 
   function folhaCultura(ed, g) {
     return `<section class="folha" aria-label="Página ${g.numero}">
-  ${cabecalhoInterno(ed, g.numero, 'Arte & Cultura')}
+  ${cabecalhoInterno(ed, g.numero, g.itens.every(p => p.tipo === 'poesia') ? 'Poesia' : g.itens.every(p => p.tipo === 'arte') ? 'Arte & Cultura' : 'Cultura & Letras')}
   <div class="ej-cultura">${g.itens.map(p => {
     const t = trecho(p, g.itens.length > 1 ? 150 : 380);
     const imgs = [p.capa_url && { url: p._img?.src || p.capa_url, alt: p.capa_alt }, ...(p.galeria || [])].filter(Boolean).slice(0, 3);
-    return `<article><p class="ej-chapeu">${chapeu(p)}</p><h2 class="ej-h-materia">${esc(p.titulo)}</h2>${p.linha_fina ? `<p class="ej-linhafina">${esc(p.linha_fina)}</p>` : ''}
-      <div class="ej-galeria">${imgs.map(i => `<img src="${esc(i.url)}" alt="${esc(i.alt || '')}" loading="lazy">`).join('')}</div>
-      <div class="ej-colunas ej-c3 ej-flex">${t.html}</div>${continua(p, t.cortado)}</article>`;
+    return `<article class="${p.tipo === 'poesia' ? 'ej-poema' : ''}"><p class="ej-chapeu">${chapeu(p)}${p.colunista ? ` · ${esc(p.colunista)}` : ''}</p><h2 class="ej-h-materia">${esc(p.titulo)}</h2>${p.linha_fina ? `<p class="ej-linhafina">${esc(p.linha_fina)}</p>` : ''}
+      ${imgs.length ? `<div class="ej-galeria">` : '<!--'}${imgs.map(i => `<img src="${esc(i.url)}" alt="${esc(i.alt || '')}" loading="lazy">`).join('')}${imgs.length ? '</div>' : '-->'}
+      <div class="ej-colunas ${p.tipo === 'poesia' ? 'ej-c1' : 'ej-c3'} ej-flex">${t.html}</div>${continua(p, t.cortado)}</article>`;
   }).join('')}</div>
 </section>`;
   }

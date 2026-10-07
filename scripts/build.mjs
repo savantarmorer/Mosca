@@ -16,10 +16,14 @@ const SECOES = {
   investigacoes: { nome: 'Investigações', desc: 'Reportagens investigativas da Mosca, baseadas em documentos, dados públicos e registros verificáveis.' },
   opiniao: { nome: 'Opinião', desc: 'Editoriais e colunas de opinião do Mosca: análise e posicionamento sobre o poder no Brasil.' },
   charges: { nome: 'Charges', desc: 'A charge do dia e o arquivo de charges do Mosca: humor gráfico sobre política e poder.' },
-  cultura: { nome: 'Arte & Cultura', desc: 'Crítica, ensaios visuais, ilustração e cultura no Mosca.' },
+  cultura: { nome: 'Arte & Cultura', desc: 'Arte, ilustração, fotografia e ensaios visuais publicados no Mosca, de artistas da redação e leitores.' },
+  poesia: { nome: 'Poesia', desc: 'Poemas inéditos publicados no Mosca: poesia brasileira contemporânea de autores e leitores.' },
+  literatura: { nome: 'Crônicas & Contos', desc: 'Crônicas e contos inéditos publicados no Mosca: literatura brasileira contemporânea.' },
   documentos: { nome: 'Documentos', desc: 'Acervo de documentos-fonte, transcrições e registros usados nas reportagens da Mosca.' },
 };
-const SECAO_DO_TIPO = { opiniao: 'opiniao', editorial: 'opiniao', charge: 'charges', arte: 'cultura' };
+const SECAO_DO_TIPO = { opiniao: 'opiniao', editorial: 'opiniao', charge: 'charges', arte: 'cultura', poesia: 'poesia', cronica: 'literatura' };
+const AUTORAL = new Set(['opiniao', 'charge', 'arte', 'poesia', 'cronica']);
+const CULTURA = new Set(['arte', 'poesia', 'cronica']);
 const OPINIAO = new Set(['opiniao', 'editorial']);
 
 const esc = (s = '') => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -115,11 +119,12 @@ const TOPO = `<header class="border-b fio">
 const NAV = `<nav aria-label="Seções" class="sans text-xs font-semibold uppercase tracking-wider border-y fio fio-duplo py-2 flex flex-wrap justify-center gap-x-6 gap-y-1">
     ${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/" class="hover:text-[color:var(--vinho)]">${esc(v.nome)}</a>`).join('\n    ')}
     <a href="/edicoes/" class="hover:text-[color:var(--vinho)]">E-jornal</a>
+    <a href="/colabore/" class="hover:text-[color:var(--vinho)]">Colabore</a>
     <a href="/denuncia/" class="text-[color:var(--vinho)]">Envie uma pauta ▸</a>
   </nav>`;
 const RODAPE = `<footer class="max-w-6xl mx-auto px-4 border-t fio fio-duplo py-6 sans text-xs text-[color:var(--cinza)] flex flex-wrap gap-4 justify-between">
   <span>© ${new Date().getFullYear()} Mosca. Jornalismo independente.</span>
-  <nav aria-label="Rodapé" class="flex flex-wrap gap-4">${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/">${esc(v.nome)}</a>`).join('')}<a href="/edicoes/">E-jornal</a><a href="/quem-somos/">Quem somos</a><a href="/linha-editorial/">Linha editorial</a><a href="/contato/">Contato</a><a href="/denuncia/">Canal anônimo</a><a href="/termos/">Termos</a><a href="/privacidade/">Privacidade</a><a href="/feed.xml">RSS</a></nav>
+  <nav aria-label="Rodapé" class="flex flex-wrap gap-4">${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/">${esc(v.nome)}</a>`).join('')}<a href="/edicoes/">E-jornal</a><a href="/colabore/">Colabore</a><a href="/quem-somos/">Quem somos</a><a href="/linha-editorial/">Linha editorial</a><a href="/contato/">Contato</a><a href="/denuncia/">Canal anônimo</a><a href="/termos/">Termos</a><a href="/privacidade/">Privacidade</a><a href="/feed.xml">RSS</a></nav>
 </footer>
 </body>
 </html>
@@ -147,9 +152,11 @@ function compartilhar(p) {
 const SCRIPT_COMPARTILHAR = `<script>document.addEventListener('click',function(e){var b=e.target.closest('[data-copiar]');if(!b)return;var u=b.getAttribute('data-copiar');if(navigator.share&&matchMedia('(pointer:coarse)').matches){navigator.share({url:u,title:document.title}).catch(function(){});return}navigator.clipboard.writeText(u).then(function(){b.textContent='Link copiado';setTimeout(function(){b.textContent='Copiar link'},2000)})});</script>`;
 const SWG = `<script async type="application/javascript" src="https://news.google.com/swg/js/v1/swg-basic.js"></script>
 <script>(self.SWG_BASIC = self.SWG_BASIC || []).push(function (basicSubscriptions) { basicSubscriptions.init({ type: "NewsArticle", isPartOfType: ["Product"], isPartOfProductId: "${SWG_ID}", clientOptions: { theme: "light", lang: "pt-BR" } }); });</script>`;
-const ROTULO = { opiniao: 'Opinião', editorial: 'Editorial', charge: 'Charge', arte: 'Arte & Cultura' };
+const ROTULO = { opiniao: 'Opinião', editorial: 'Editorial', charge: 'Charge', arte: 'Arte & Cultura', poesia: 'Poesia', cronica: 'Crônica' };
 const kicker = p => esc(p.kicker || ROTULO[p.tipo] || SECOES[p.secao].nome);
-const autor = p => OPINIAO.has(p.tipo) || p.tipo === 'charge' || p.tipo === 'arte' ? (p.tipo === 'editorial' ? 'Editorial do Mosca' : p.colunista || p.assinatura || 'Redação Mosca') : p.assinatura || 'Redação Mosca';
+const autor = p => p.tipo === 'editorial' ? 'Editorial do Mosca' : AUTORAL.has(p.tipo) ? p.colunista || p.assinatura || 'Redação Mosca' : p.assinatura || 'Redação Mosca';
+const autorSlug = p => AUTORAL.has(p.tipo) && p.colunista ? slugify(p.colunista) : null;
+const autorLink = p => autorSlug(p) ? `<a href="/autor/${autorSlug(p)}/" class="hover:underline" rel="author">${esc(autor(p))}</a>` : esc(autor(p));
 function galeria(p) {
   if (!p.galeria.length) return '';
   return `<div class="galeria grid ${p.galeria.length > 1 ? 'sm:grid-cols-2' : ''} gap-6 my-10">${p.galeria.map(g => `<figure><img src="${esc(g.url)}" alt="${esc(g.alt || '')}" loading="lazy" decoding="async" class="w-full">${g.legenda ? `<figcaption class="sans text-xs text-[color:var(--cinza)] mt-2 leading-relaxed">${esc(g.legenda)}</figcaption>` : ''}</figure>`).join('')}</div>`;
@@ -158,23 +165,26 @@ function galeria(p) {
 // ───────── matéria ─────────
 function materia(p, todos) {
   const s = SECOES[p.secao];
-  const desc = p.descricao || p.linha_fina || textoPuro(corpoHtml(p)).slice(0, 155) || `${ROTULO[p.tipo] || 'Matéria'}: ${p.titulo}`;
+  const desc = p.descricao || p.linha_fina || (p.tipo === 'poesia' ? `Poema de ${autor(p)} publicado no Mosca: ${textoPuro(corpoHtml(p)).slice(0, 110)}…` : textoPuro(corpoHtml(p)).slice(0, 155)) || `${ROTULO[p.tipo] || 'Matéria'}: ${p.titulo}`;
   const relacionadas = todos.filter(o => o !== p && (o.secao === p.secao || (o.secoes_extra || []).includes(p.secao))).slice(0, 3);
   const og = p._img?.og || p.og_imagem || p.capa_url || '/assets/img/og-default.jpg';
   const imagens = [...new Set([p._img?.og, p.og_imagem, p._img?.src, p.capa_url].filter(Boolean).map(abs))];
   const temas = (p.palavras_chave || []).map(k => [k, slugify(k)]).filter(([, s]) => s);
   const ld = [{
-    '@context': 'https://schema.org', '@type': OPINIAO.has(p.tipo) ? 'OpinionNewsArticle' : 'NewsArticle',
+    '@context': 'https://schema.org', '@type': OPINIAO.has(p.tipo) ? 'OpinionNewsArticle' : p.tipo === 'poesia' ? 'CreativeWork' : CULTURA.has(p.tipo) ? 'Article' : 'NewsArticle',
+    genre: { poesia: 'Poesia', cronica: 'Crônica', arte: 'Arte' }[p.tipo],
     mainEntityOfPage: { '@type': 'WebPage', '@id': SITE + url(p) },
     headline: (p.titulo_seo || p.titulo).slice(0, 110), alternativeHeadline: p.linha_fina || undefined, description: desc,
     image: imagens.length ? imagens : [SITE + '/assets/img/og-default.jpg'],
     datePublished: iso(p.publicado_em), dateModified: iso(p.atualizado_em || p.publicado_em),
     articleSection: s.nome, inLanguage: 'pt-BR', keywords: p.palavras_chave || [], wordCount: textoPuro(corpoHtml(p)).split(' ').length,
-    author: p.tipo === 'opiniao' || ((p.tipo === 'charge' || p.tipo === 'arte') && p.colunista) ? { '@type': 'Person', name: autor(p) } : { '@type': 'Organization', name: autor(p), url: SITE + '/' },
+    author: autorSlug(p) ? { '@type': 'Person', name: autor(p), url: `${SITE}/autor/${autorSlug(p)}/`, ...(p.autor_bio ? { description: p.autor_bio } : {}) } : { '@type': 'Organization', name: autor(p), url: SITE + '/' },
     publisher: ORG, isAccessibleForFree: true,
     isPartOf: { '@type': ['CreativeWork', 'Product'], name: 'Mosca', productID: SWG_ID },
     about: temas.map(([k]) => ({ '@type': 'Thing', name: k })),
   }, crumbs([['Início', '/'], [s.nome, `/${p.secao}/`], [p.titulo, null]])];
+  if (p.tipo === 'arte') for (const g of [p.capa_url && { url: p._img?.src || p.capa_url, alt: p.capa_alt, legenda: p.capa_credito }, ...p.galeria].filter(Boolean))
+    ld.push({ '@context': 'https://schema.org', '@type': 'VisualArtwork', name: g.legenda || p.titulo, image: abs(g.url), description: g.alt, creator: { '@type': autorSlug(p) ? 'Person' : 'Organization', name: autor(p) }, dateCreated: iso(p.publicado_em), isPartOf: SITE + url(p) });
   if (p.tipo === 'charge' && p.capa_url) ld.push({ '@context': 'https://schema.org', '@type': 'ImageObject', contentUrl: abs(p._img?.src || p.capa_url), name: p.titulo, caption: p.capa_alt, creator: { '@type': p.colunista ? 'Person' : 'Organization', name: autor(p) }, datePublished: iso(p.publicado_em), creditText: autor(p), copyrightNotice: 'Mosca' });
   const extra = [
     `<meta property="article:published_time" content="${iso(p.publicado_em)}">`,
@@ -195,7 +205,7 @@ ${TOPO}
     <h1 class="display font-black text-4xl md:text-5xl leading-[1.06] mt-2">${esc(p.titulo)}</h1>
     ${p.linha_fina ? `<p class="text-xl leading-relaxed mt-4 text-[#333]">${esc(p.linha_fina)}</p>` : ''}
     <div class="sans text-xs border-y fio mt-6 py-2 flex flex-wrap gap-x-5 gap-y-1">
-      <span class="font-semibold">${p.tipo === 'opiniao' ? 'Por ' : ''}${esc(autor(p))}</span>
+      <span class="font-semibold">${AUTORAL.has(p.tipo) && p.colunista ? 'Por ' : ''}${autorLink(p)}</span>
       <time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)} · ${hora(p.publicado_em).replace(':', 'h')}</time>
       <a href="/${p.secao}/">${esc(s.nome)}</a>
       <span class="text-[color:var(--cinza)]">${minutos(p)} min de leitura</span>
@@ -207,10 +217,12 @@ ${TOPO}
     ${img(p, p.tipo === 'charge' ? 'w-full border fio' : 'w-full', true)}
     ${p.capa_credito ? `<figcaption class="sans text-[11px] text-[color:var(--cinza)] mt-1 px-4 sm:px-0">${esc(p.capa_credito)}</figcaption>` : ''}
   </figure>` : ''}
-  <div class="corpo mt-8${p.tipo === 'charge' || p.tipo === 'arte' ? ' sem-capitular' : ''}">
+  <div class="corpo mt-8${['charge', 'arte', 'poesia'].includes(p.tipo) ? ' sem-capitular' : ''}${p.tipo === 'poesia' ? ' poema' : ''}">
 ${corpoHtml(p)}
   </div>
   ${galeria(p)}
+  ${autorSlug(p) ? `<aside class="border-t fio mt-10 pt-5 flex gap-4 items-start" aria-label="Sobre o autor"><div><p class="kicker">Sobre ${p.tipo === 'opiniao' ? 'o colunista' : 'a autoria'}</p><p class="display font-bold text-lg mt-1"><a href="/autor/${autorSlug(p)}/" class="hover:underline">${esc(autor(p))}</a></p>${p.autor_bio ? `<p class="text-[15px] leading-relaxed mt-1">${esc(p.autor_bio)}</p>` : ''}</div></aside>` : ''}
+  ${CULTURA.has(p.tipo) || p.tipo === 'opiniao' ? `<p class="sans text-sm mt-8 border fio p-4">Você também escreve ou cria? <a href="/colabore/" class="text-[color:var(--vinho)] underline">Envie seu trabalho para o Mosca</a>.</p>` : ''}
   ${p.atualizado_em && new Date(p.atualizado_em) - new Date(p.publicado_em) > 3600e3 ? `<p class="sans text-xs text-[color:var(--cinza)] mt-8">Atualizado em <time datetime="${iso(p.atualizado_em)}">${dataCurta(p.atualizado_em)}, ${hora(p.atualizado_em)}</time>.</p>` : ''}
   <div class="border-t fio mt-10 pt-4">${compartilhar(p)}</div>
   ${temas.length ? `<nav aria-label="Temas" class="mt-6 sans text-xs flex flex-wrap gap-2">${temas.map(([k, s]) => `<a class="border fio px-2 py-1 hover:border-[color:var(--vinho)] hover:text-[color:var(--vinho)]" href="/tema/${s}/">${esc(k)}</a>`).join('')}</nav>` : ''}
@@ -218,10 +230,10 @@ ${corpoHtml(p)}
     <h2 class="sans text-xs font-bold uppercase tracking-[.2em]">Leia também</h2>
     <ul class="mt-3 space-y-3">${relacionadas.map(o => `<li><a class="display font-bold text-lg leading-snug hover:underline" href="${url(o)}">${esc(o.titulo)}</a></li>`).join('')}</ul>
   </aside>` : ''}
-  <aside class="border fio p-5 mt-10">
+  ${CULTURA.has(p.tipo) ? '' : `<aside class="border fio p-5 mt-10">
     <p class="kicker">Canal anônimo</p>
     <p class="mt-1">Tem documentos ou informações sobre este tema? <a href="/denuncia/" class="text-[color:var(--vinho)] underline">Envie com segurança</a>.</p>
-  </aside>
+  </aside>`}
 </article>
 </main>
 ${SCRIPT_COMPARTILHAR}
@@ -260,6 +272,25 @@ ${TOPO}
 ${RODAPE}`;
 }
 
+// ───────── autor ─────────
+function paginaAutor(slug, lista) {
+  const nome = autor(lista[0]);
+  const bio = lista.find(p => p.autor_bio)?.autor_bio;
+  const desc = bio ? `${nome}: ${bio}`.slice(0, 160) : `Textos e trabalhos de ${nome} publicados no Mosca.`;
+  return head({ titulo: `${nome} | Mosca`, desc, caminho: `/autor/${slug}/`, index: true, tipo: 'profile',
+    ld: [crumbs([['Início', '/'], ['Autores', null], [nome, null]]), { '@context': 'https://schema.org', '@type': 'ProfilePage', url: `${SITE}/autor/${slug}/`,
+      mainEntity: { '@type': 'Person', name: nome, ...(bio ? { description: bio } : {}), url: `${SITE}/autor/${slug}/` },
+      hasPart: lista.map(p => ({ '@type': OPINIAO.has(p.tipo) ? 'OpinionNewsArticle' : 'CreativeWork', headline: p.titulo, url: SITE + url(p), datePublished: iso(p.publicado_em) })) }] }) + `
+${TOPO}
+<main class="max-w-6xl mx-auto px-4 py-10">
+<nav aria-label="Trilha" class="sans text-[11px] uppercase tracking-wider text-[color:var(--cinza)]"><a href="/">Início</a> / <span>Autoria</span></nav>
+<header class="border-b fio fio-duplo pt-4 pb-4 mt-3"><p class="kicker">Autoria</p><h1 class="display font-black text-5xl mt-1">${esc(nome)}</h1>${bio ? `<p class="mt-3 text-lg text-[#333] max-w-2xl">${esc(bio)}</p>` : ''}</header>
+<ol class="max-w-3xl">${lista.map(p => `<li class="py-6 border-b border-[#d6d3cc]"><a class="manchete block" href="${url(p)}"><p class="kicker">${kicker(p)}</p><h2 class="display font-bold text-2xl leading-tight mt-1">${esc(p.titulo)}</h2>${p.linha_fina ? `<p class="mt-2 leading-relaxed">${esc(p.linha_fina)}</p>` : ''}</a><p class="sans text-[11px] uppercase tracking-wider mt-2 text-[color:var(--cinza)]"><time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)}</time></p></li>`).join('')}</ol>
+<p class="sans text-sm mt-8"><a href="/colabore/" class="text-[color:var(--vinho)] underline">Publique você também no Mosca ▸</a></p>
+</main>
+${RODAPE}`;
+}
+
 // ───────── capa ─────────
 function capa(posts, edicoes, ej) {
   const reps = posts.filter(p => p.tipo === 'reportagem');
@@ -267,7 +298,7 @@ function capa(posts, edicoes, ej) {
   const foco = resto.slice(0, 2), mais = resto.slice(2, 8);
   const opinioes = posts.filter(p => OPINIAO.has(p.tipo)).slice(0, 3);
   const charge = posts.find(p => p.tipo === 'charge');
-  const cultura = posts.filter(p => p.tipo === 'arte').slice(0, 4);
+  const cultura = posts.filter(p => CULTURA.has(p.tipo)).slice(0, 4);
   const ed = edicoes.at(-1);
   const agora = new Date();
   const card = (p, grande) => `<a class="manchete block" href="${url(p)}"><p class="kicker">${kicker(p)}</p><h3 class="display font-bold ${grande ? 'text-2xl' : 'text-xl'} leading-tight mt-1">${esc(p.titulo)}</h3>${grande && p.linha_fina ? `<p class="mt-2 text-[15px] leading-relaxed">${esc(p.linha_fina)}</p>` : ''}</a>`;
@@ -306,7 +337,7 @@ function capa(posts, edicoes, ej) {
     </div>
   </section>` : ''}
   ${opinioes.length ? `<section aria-labelledby="opiniao" class="mt-10 border-t-[3px] border-double fio pt-4">
-    <div class="flex items-baseline justify-between"><h2 id="opiniao" class="display font-black text-3xl">Opinião</h2><a href="/opiniao/" class="sans text-[11px] font-semibold uppercase tracking-wider hover:text-[color:var(--vinho)]">Todas as colunas →</a></div>
+    <div class="flex items-baseline justify-between"><h2 id="opiniao" class="display font-black text-3xl">Opinião</h2><span class="sans text-[11px] font-semibold uppercase tracking-wider flex gap-4"><a href="/opiniao/" class="hover:text-[color:var(--vinho)]">Todas as colunas →</a><a href="/colabore/" class="text-[color:var(--vinho)]">Escreva para o Mosca ▸</a></span></div>
     <div class="grid md:grid-cols-${Math.min(opinioes.length, 3)} gap-6 mt-4">${opinioes.map((p, i) => `<a href="${url(p)}" class="manchete block ${i ? 'md:border-l fio md:pl-6' : ''}">
       <p class="kicker">${p.tipo === 'editorial' ? 'Editorial' : esc(autor(p))}</p>
       <h3 class="display font-bold text-xl leading-tight mt-1 ${p.tipo === 'editorial' ? 'italic' : ''}">${esc(p.titulo)}</h3>
@@ -345,8 +376,8 @@ function capa(posts, edicoes, ej) {
     </section>
   </aside>
   ${cultura.length ? `<section aria-labelledby="cultura" class="lg:col-span-12 border-t-[3px] border-double fio pt-4">
-    <div class="flex items-baseline justify-between"><h2 id="cultura" class="display font-black text-3xl">Arte &amp; Cultura</h2><a href="/cultura/" class="sans text-[11px] font-semibold uppercase tracking-wider hover:text-[color:var(--vinho)]">Ver tudo →</a></div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">${cultura.map(p => `<a href="${url(p)}" class="manchete block">${p.capa_url ? img(p, 'w-full aspect-[4/3] object-cover', false, '(min-width: 1024px) 270px, 50vw') : ''}<p class="kicker mt-3">${kicker(p)}</p><h3 class="display font-bold text-lg leading-tight mt-1">${esc(p.titulo)}</h3></a>`).join('')}</div>
+    <div class="flex flex-wrap gap-x-6 items-baseline justify-between"><h2 id="cultura" class="display font-black text-3xl">Arte &amp; Cultura</h2><span class="sans text-[11px] font-semibold uppercase tracking-wider flex gap-4"><a href="/cultura/" class="hover:text-[color:var(--vinho)]">Arte</a><a href="/poesia/" class="hover:text-[color:var(--vinho)]">Poesia</a><a href="/literatura/" class="hover:text-[color:var(--vinho)]">Crônicas &amp; Contos</a><a href="/colabore/" class="text-[color:var(--vinho)]">Envie o seu ▸</a></span></div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">${cultura.map(p => `<a href="${url(p)}" class="manchete block">${p.capa_url ? img(p, 'w-full aspect-[4/3] object-cover', false, '(min-width: 1024px) 270px, 50vw') : ''}<p class="kicker mt-3">${kicker(p)}</p><h3 class="display font-bold text-lg leading-tight mt-1">${esc(p.titulo)}</h3>${p.colunista ? `<p class="sans text-xs text-[color:var(--cinza)] mt-1">${esc(p.colunista)}</p>` : ''}${!p.capa_url ? `<p class="mt-2 text-[15px] leading-relaxed italic line-clamp-4">${esc(textoPuro(corpoHtml(p)).slice(0, 220))}…</p>` : ''}</a>`).join('')}</div>
   </section>` : ''}
 </main>
 ${RODAPE}`;
@@ -363,7 +394,7 @@ ${TOPO}
 <main class="max-w-6xl mx-auto px-4 py-10">
 <nav aria-label="Trilha" class="sans text-[11px] uppercase tracking-wider text-[color:var(--cinza)]"><a href="/">Início</a> / <span>${esc(s.nome)}</span></nav>
 <header class="border-b fio fio-duplo pt-4 pb-4 mt-3"><h1 class="display font-black text-5xl">${esc(s.nome)}</h1><p class="mt-2 text-lg text-[#333] max-w-2xl">${esc(s.desc)}</p></header>
-${slug === 'charges' && lista.length ? `<ol class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">${lista.map(p => `<li><a href="${url(p)}" class="manchete block">${img(p, 'w-full border fio', false, '(min-width: 1024px) 360px, 100vw')}<h2 class="display font-bold text-xl leading-tight mt-3">${esc(p.titulo)}</h2></a><p class="sans text-[11px] uppercase tracking-wider mt-1 text-[color:var(--cinza)]"><time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)}</time>${p.colunista ? ` · ${esc(p.colunista)}` : ''}</p></li>`).join('')}</ol>` : `<ol class="max-w-3xl">${lista.length ? lista.map(p => `<li class="py-6 border-b border-[#d6d3cc] grid sm:grid-cols-[1fr_180px] gap-5"><div><a class="manchete block" href="${url(p)}"><p class="kicker">${kicker(p)}</p><h2 class="display font-bold text-2xl md:text-3xl leading-tight mt-1">${esc(p.titulo)}</h2>${p.linha_fina ? `<p class="mt-2 leading-relaxed">${esc(p.linha_fina)}</p>` : ''}</a><p class="sans text-[11px] uppercase tracking-wider mt-2 text-[color:var(--cinza)]"><time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)}</time> · ${esc(autor(p))}</p></div>${p.capa_url && p.tipo !== 'opiniao' && p.tipo !== 'editorial' ? `<a href="${url(p)}" class="grao hidden sm:block self-start" tabindex="-1" aria-hidden="true">${img(p, 'w-full aspect-[4/3] object-cover', false)}</a>` : ''}</li>`).join('') : '<li class="py-6 text-[color:var(--cinza)] italic">Nenhuma publicação nesta seção ainda.</li>'}</ol>`}
+${slug === 'charges' && lista.length ? `<ol class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">${lista.map(p => `<li><a href="${url(p)}" class="manchete block">${img(p, 'w-full border fio', false, '(min-width: 1024px) 360px, 100vw')}<h2 class="display font-bold text-xl leading-tight mt-3">${esc(p.titulo)}</h2></a><p class="sans text-[11px] uppercase tracking-wider mt-1 text-[color:var(--cinza)]"><time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)}</time>${p.colunista ? ` · ${esc(p.colunista)}` : ''}</p></li>`).join('')}</ol>` : `<ol class="max-w-3xl">${lista.length ? lista.map(p => `<li class="py-6 border-b border-[#d6d3cc] grid sm:grid-cols-[1fr_180px] gap-5"><div><a class="manchete block" href="${url(p)}"><p class="kicker">${kicker(p)}</p><h2 class="display font-bold text-2xl md:text-3xl leading-tight mt-1">${esc(p.titulo)}</h2>${p.linha_fina ? `<p class="mt-2 leading-relaxed">${esc(p.linha_fina)}</p>` : ''}</a><p class="sans text-[11px] uppercase tracking-wider mt-2 text-[color:var(--cinza)]"><time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)}</time> · ${autorLink(p)}</p></div>${p.capa_url && !OPINIAO.has(p.tipo) ? `<a href="${url(p)}" class="grao hidden sm:block self-start" tabindex="-1" aria-hidden="true">${img(p, 'w-full aspect-[4/3] object-cover', false)}</a>` : ''}</li>`).join('') : '<li class="py-6 text-[color:var(--cinza)] italic">Nenhuma publicação nesta seção ainda.</li>'}</ol>`}
 </main>
 ${RODAPE}`];
 }
@@ -371,7 +402,7 @@ ${RODAPE}`];
 // ───────── execução ─────────
 const posts = await carregar();
 const edicoesPers = await carregarEdicoes();
-for (const s of [...Object.keys(SECOES), 'tema', 'edicao', 'edicoes']) fs.rmSync(path.join(ROOT, s), { recursive: true, force: true });
+for (const s of [...Object.keys(SECOES), 'tema', 'edicao', 'edicoes', 'autor']) fs.rmSync(path.join(ROOT, s), { recursive: true, force: true });
 for (const p of posts) p._img = await processarCapa(ROOT, p);
 for (const pg of PAGINAS) write(`${pg.caminho.slice(1)}index.html`, simples(pg));
 write('404.html', simples({ caminho: '/404.html', titulo: 'Página não encontrada', desc: 'Página não encontrada.', index: false,
@@ -383,12 +414,15 @@ for (const p of posts) for (const k of p.palavras_chave || []) {
   temas.get(s).lista.push(p);
 }
 for (const [s, t] of temas) write(`tema/${s}/index.html`, tema(t.nome, s, t.lista));
+const autores = new Map();
+for (const p of posts) { const a = autorSlug(p); if (!a) continue; if (!autores.has(a)) autores.set(a, []); autores.get(a).push(p); }
+for (const [a, lista] of autores) write(`autor/${a}/index.html`, paginaAutor(a, lista));
 const edicoes = montarEdicoes(posts, edicoesPers);
 const ej = criarEjornal({ esc, url, SECOES, textoPuro, corpoHtml, SITE, head, crumbs, TOPO, RODAPE, dataCurta });
 edicoes.forEach((ed, i) => write(`edicao/${ed.data}/index.html`, ej.paginaEdicao(ed, edicoes[i - 1], edicoes[i + 1])));
 write('edicoes/index.html', ej.paginaArquivo(edicoes));
 write('index.html', capa(posts, edicoes, ej));
-const indexaveis = ['/', ...PAGINAS.map(p => p.caminho), ...[...temas].filter(([, t]) => t.lista.length >= 2).map(([s]) => `/tema/${s}/`)];
+const indexaveis = ['/', '/colabore/', ...[...autores.keys()].map(a => `/autor/${a}/`), ...PAGINAS.map(p => p.caminho), ...[...temas].filter(([, t]) => t.lista.length >= 2).map(([s]) => `/tema/${s}/`)];
 for (const s of Object.keys(SECOES)) { const [n, html] = secao(s, posts); write(`${s}/index.html`, html); if (n) indexaveis.push(`/${s}/`); }
 for (const p of posts) write(`${p.secao}/${p.slug}/index.html`, materia(p, posts));
 
@@ -396,7 +430,7 @@ const hoje = iso(new Date());
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${indexaveis.map(u => `  <url><loc>${SITE}${u}</loc><lastmod>${posts[0] ? iso(posts[0].atualizado_em || posts[0].publicado_em) : hoje}</lastmod></url>`).join('\n')}
-${posts.map(p => `  <url><loc>${SITE}${url(p)}</loc><lastmod>${iso(p.atualizado_em || p.publicado_em)}</lastmod>${p.capa_url ? `<image:image><image:loc>${esc(abs(p.capa_url))}</image:loc></image:image>` : ''}</url>`).join('\n')}
+${posts.map(p => `  <url><loc>${SITE}${url(p)}</loc><lastmod>${iso(p.atualizado_em || p.publicado_em)}</lastmod>${[p._img?.src || p.capa_url, ...p.galeria.map(g => g.url)].filter(Boolean).map(i => `<image:image><image:loc>${esc(abs(i))}</image:loc></image:image>`).join('')}</url>`).join('\n')}
   <url><loc>${SITE}/denuncia/</loc></url>
 </urlset>
 `);

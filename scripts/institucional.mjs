@@ -22,6 +22,8 @@ export const PAGINAS = [
     caminho: '/contato/', titulo: 'Contato', tipo: 'ContactPage',
     desc: 'Como falar com a redação do Mosca: e-mail, pedidos de correção, direito de resposta e envio anônimo de documentos.',
     html: `<p>Escolha o canal de acordo com o que você precisa.</p>
+<h2>Publique no Mosca</h2>
+<p>Artigos de opinião, poesia, crônicas, contos, ilustrações e fotografias: envie pela página <a href="/colabore/">Colabore</a>.</p>
 <h2>Redação</h2>
 <p>Sugestões de pauta, pedidos de correção, direito de resposta e imprensa: <a href="mailto:${EMAIL}">${EMAIL}</a>. Respondemos pedidos de correção e de direito de resposta com prioridade.</p>
 <h2>Envio anônimo de documentos</h2>
@@ -56,13 +58,16 @@ export const PAGINAS = [
 <p>É permitido citar trechos curtos com crédito ao Mosca e link para a matéria original. A reprodução integral depende de autorização prévia pelo e-mail <a href="mailto:${EMAIL}">${EMAIL}</a>.</p>
 <h2>3. Envio de informações</h2>
 <p>Quem envia informações pelo canal anônimo declara fazê-lo por vontade própria. O Mosca avalia todo material recebido segundo sua linha editorial e não tem obrigação de publicá-lo. Não envie material obtido por meio de crime contra terceiros.</p>
-<h2>4. Links externos</h2>
+<h2 id="colaboracoes">4. Colaborações de leitores</h2>
+<p>Ao enviar um texto, poema, crônica, conto, ilustração ou fotografia pela página <a href="/colabore/">Colabore</a>, você declara ser o autor do trabalho e ter o direito de publicá-lo, inclusive sobre pessoas que apareçam nas imagens. Os direitos autorais continuam seus. Você concede ao Mosca uma licença gratuita e não exclusiva para publicar o trabalho no site, no e-jornal, no PDF da edição e na divulgação do Mosca em redes sociais, com crédito à assinatura informada.</p>
+<p>A redação pode recusar qualquer trabalho, fazer ajustes de revisão (ortografia, título, tamanho) sem alterar o sentido e despublicá-lo se houver violação de direitos ou destes termos. Para pedir a retirada de um trabalho seu, escreva para <a href="mailto:${EMAIL}">${EMAIL}</a>. Não publicamos conteúdo discriminatório, difamatório, plágio ou material de terceiros sem autorização.</p>
+<h2>5. Links externos</h2>
 <p>As matérias podem conter links para sites de terceiros. O Mosca não se responsabiliza pelo conteúdo ou pelas práticas desses sites.</p>
-<h2>5. Correções e direito de resposta</h2>
+<h2>6. Correções e direito de resposta</h2>
 <p>Pedidos de correção e de direito de resposta (Lei nº 13.188/2015) devem ser enviados para <a href="mailto:${EMAIL}">${EMAIL}</a> e serão analisados com prioridade.</p>
-<h2>6. Alterações</h2>
+<h2>7. Alterações</h2>
 <p>Estes termos podem ser atualizados a qualquer momento. A data da última versão aparece no topo desta página.</p>
-<h2>7. Legislação</h2>
+<h2>8. Legislação</h2>
 <p>Estes termos são regidos pela legislação brasileira.</p>`,
   },
   {
@@ -78,9 +83,11 @@ export const PAGINAS = [
 <p>As páginas de matéria carregam um script do Google News (Reader Revenue Manager) que identifica o Mosca como publicação no Google. Ao carregar esse script, o Google pode receber dados técnicos do seu navegador, conforme a <a href="https://policies.google.com/privacy?hl=pt-BR">política de privacidade do Google</a>.</p>
 <h2>4. Canal anônimo</h2>
 <p>O conteúdo enviado pelo <a href="/denuncia/">canal anônimo</a> é criptografado no seu aparelho antes de sair dele e só pode ser aberto pela redação. Não pedimos nome, e-mail ou telefone. A página do canal não carrega scripts nem fontes de terceiros. O serviço de armazenamento (Supabase) e a hospedagem podem registrar dados técnicos de conexão, como o IP, por período limitado; para não expor o seu IP, use o Tor Browser.</p>
-<h2>5. E-mail</h2>
+<h2>5. Colaborações de leitores</h2>
+<p>Quem envia um trabalho pela página <a href="/colabore/">Colabore</a> informa uma assinatura (que pode ser pseudônimo) e, se quiser, uma minibiografia — ambas publicadas junto com o trabalho aprovado — e, opcionalmente, um e-mail, que fica visível apenas para a redação e serve só para contato sobre o envio. Fotos enviadas têm os metadados (como localização) removidos no seu aparelho antes do envio. Trabalhos recusados podem ser apagados a qualquer momento; peça a exclusão pelo e-mail abaixo.</p>
+<h2>6. E-mail</h2>
 <p>Se você nos escrever por e-mail, usaremos seu endereço apenas para responder. Você pode pedir a exclusão da conversa a qualquer momento.</p>
-<h2>6. Seus direitos</h2>
+<h2>7. Seus direitos</h2>
 <p>Você pode solicitar informações sobre o tratamento, correção ou exclusão de dados pessoais pelo e-mail <a href="mailto:${EMAIL}">${EMAIL}</a>.</p>`,
   },
 ];
