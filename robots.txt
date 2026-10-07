@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Sitemap: https://mosca.news/sitemap.xml
+Sitemap: https://mosca.news/news-sitemap.xml

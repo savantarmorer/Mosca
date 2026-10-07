@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canal anônimo — Envie uma pauta | Mosca</title>
+<meta name="description" content="Envie denúncias, documentos e vazamentos à Mosca sem identificação. Não registramos IP nem dados pessoais.">
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://mosca.news/denuncia/">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lora&family=Playfair+Display:wght@900&family=Roboto+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/mosca.css">
+</head>
+<body class="antialiased">
+<header class="border-b fio"><div class="max-w-6xl mx-auto px-4 py-3"><a href="/" class="display font-black text-3xl">Mosca<span class="text-[color:var(--vinho)]">.</span></a></div></header>
+<main class="max-w-[640px] mx-auto px-4 py-10">
+  <p class="kicker">Canal seguro</p>
+  <h1 class="display font-black text-4xl mt-2">Envie uma pauta ou vazamento</h1>
+  <ol class="sans text-sm mt-6 space-y-2 border-l-2 border-[color:var(--vinho)] pl-4">
+    <li>1. Para máxima proteção, use o <strong>Tor Browser</strong> e uma rede que não seja a do seu trabalho.</li>
+    <li>2. Remova metadados dos arquivos (autor, GPS) antes de enviar.</li>
+    <li>3. Não se identifique. Se quiser retorno, anote o código gerado após o envio.</li>
+  </ol>
+  <form action="/api/denuncia" method="post" enctype="multipart/form-data" autocomplete="off" class="mt-8 space-y-6">
+    <label class="block"><span class="sans text-xs font-semibold uppercase tracking-wider">Relato</span>
+      <textarea name="relato" required rows="10" class="mt-2 w-full bg-transparent border fio p-3 focus:outline-none focus:border-[color:var(--vinho)]"></textarea></label>
+    <label class="block"><span class="sans text-xs font-semibold uppercase tracking-wider">Arquivos (PDF, imagens, áudio)</span>
+      <input type="file" name="arquivos" multiple class="mt-2 block sans text-sm"></label>
+    <button class="sans text-xs font-semibold uppercase tracking-wider bg-[color:var(--tinta)] text-[color:var(--papel)] px-6 py-3 hover:bg-[color:var(--vinho)]">Enviar com segurança</button>
+  </form>
+  <p class="mono text-xs mt-8 text-[color:var(--cinza)]">Sem cookies, sem analytics, sem scripts de terceiros nesta página na versão de produção.</p>
+</main>
+</body></html>
