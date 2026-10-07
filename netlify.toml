@@ -10,8 +10,19 @@
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
 
+# Imagens e fontes: cache longo. CSS/JS: o navegador sempre confere se mudou (o build também versiona com ?v=).
 [[headers]]
   for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/assets/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/gen/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"
 

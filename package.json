@@ -2,7 +2,7 @@
   "name": "mosca",
   "private": true,
   "scripts": {
-    "build": "node scripts/build.mjs && tailwindcss -i src/tailwind.css -o assets/tailwind.css --minify",
+    "build": "node scripts/build.mjs && tailwindcss -i src/tailwind.css -o assets/tailwind.css --minify && node scripts/versionar.mjs",
     "dev": "MOSCA_OFFLINE=1 npm run build && python3 -m http.server 8080"
   },
   "devDependencies": {
