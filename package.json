@@ -6,9 +6,14 @@
     "dev": "MOSCA_OFFLINE=1 npm run build && python3 -m http.server 8080"
   },
   "devDependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/lora": "^5.3.0",
+    "@fontsource/playfair-display": "^5.3.0",
+    "@fontsource/roboto-mono": "^5.3.0",
     "@supabase/supabase-js": "^2.117.3",
     "openpgp": "^5.11.2",
     "quill": "^2.0.3",
+    "sharp": "^0.35.5",
     "tailwindcss": "3.4.19"
   },
   "type": "module"

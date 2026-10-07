@@ -28,3 +28,6 @@ a.manchete:hover h2,a.manchete:hover h3{text-decoration:underline;text-decoratio
 .corpo pre{font-family:'Roboto Mono',monospace;font-size:.85rem;background:#efece6;padding:1rem;overflow-x:auto;margin:0 0 1.35em}
 .corpo .ql-align-center{text-align:center}.corpo .ql-align-right{text-align:right}.corpo .ql-align-justify{text-align:justify}
 .corpo a[href$=".pdf"]::after{content:"PDF";font-family:'Roboto Mono',monospace;font-size:.65rem;border:1px solid var(--vinho);padding:0 .25rem;margin-left:.3rem;vertical-align:middle;text-decoration:none;display:inline-block}
+.sem-capitular p:first-of-type::first-letter{all:unset}
+.compartilhar a,.compartilhar button{border-bottom:1px solid transparent;text-transform:inherit;letter-spacing:inherit}
+.compartilhar a:hover,.compartilhar button:hover{color:var(--vinho);border-color:var(--vinho)}
