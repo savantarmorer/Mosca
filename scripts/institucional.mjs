@@ -23,7 +23,7 @@ export const PAGINAS = [
     desc: 'Como falar com a redação do Mosca: e-mail, pedidos de correção, direito de resposta e envio anônimo de documentos.',
     html: `<p>Escolha o canal de acordo com o que você precisa.</p>
 <h2>Publique no Mosca</h2>
-<p>Artigos de opinião, poesia, crônicas, contos, ilustrações e fotografias: envie pela página <a href="/colabore/">Colabore</a>.</p>
+<p>Artigos de opinião, poesia, crônicas, contos, ilustrações e fotografias: envie pela página <a href="/colabore/">Colabore</a>. Para sugerir um assunto para a redação investigar, use <a href="/pauta/">Sugira uma pauta</a>.</p>
 <h2>Redação</h2>
 <p>Sugestões de pauta, pedidos de correção, direito de resposta e imprensa: <a href="mailto:${EMAIL}">${EMAIL}</a>. Respondemos pedidos de correção e de direito de resposta com prioridade.</p>
 <h2>Envio anônimo de documentos</h2>
@@ -83,8 +83,9 @@ export const PAGINAS = [
 <p>As páginas de matéria carregam um script do Google News (Reader Revenue Manager) que identifica o Mosca como publicação no Google. Ao carregar esse script, o Google pode receber dados técnicos do seu navegador, conforme a <a href="https://policies.google.com/privacy?hl=pt-BR">política de privacidade do Google</a>.</p>
 <h2>4. Canal anônimo</h2>
 <p>O conteúdo enviado pelo <a href="/denuncia/">canal anônimo</a> é criptografado no seu aparelho antes de sair dele e só pode ser aberto pela redação. Não pedimos nome, e-mail ou telefone. A página do canal não carrega scripts nem fontes de terceiros. O serviço de armazenamento (Supabase) e a hospedagem podem registrar dados técnicos de conexão, como o IP, por período limitado; para não expor o seu IP, use o Tor Browser.</p>
-<h2>5. Colaborações de leitores</h2>
+<h2>5. Colaborações e sugestões de pauta</h2>
 <p>Quem envia um trabalho pela página <a href="/colabore/">Colabore</a> informa uma assinatura (que pode ser pseudônimo) e, se quiser, uma minibiografia — ambas publicadas junto com o trabalho aprovado — e, opcionalmente, um e-mail, que fica visível apenas para a redação e serve só para contato sobre o envio. Fotos enviadas têm os metadados (como localização) removidos no seu aparelho antes do envio. Trabalhos recusados podem ser apagados a qualquer momento; peça a exclusão pelo e-mail abaixo.</p>
+<p>Na página <a href="/pauta/">Sugira uma pauta</a>, nome, cidade e contato são opcionais e ficam visíveis apenas para a redação. A sugestão em si nunca é publicada como foi enviada: serve de ponto de partida para apuração própria.</p>
 <h2>6. E-mail</h2>
 <p>Se você nos escrever por e-mail, usaremos seu endereço apenas para responder. Você pode pedir a exclusão da conversa a qualquer momento.</p>
 <h2>7. Seus direitos</h2>

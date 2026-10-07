@@ -350,7 +350,7 @@ $('#galeria-arquivos').addEventListener('change', async e => {
 });
 
 // ───────── e-jornal ─────────
-const ROTULO_TIPO = { reportagem: 'Reportagem', opiniao: 'Opinião', editorial: 'Editorial', charge: 'Charge', arte: 'Arte', poesia: 'Poesia', cronica: 'Crônica', fotografia: 'Fotografia' };
+const ROTULO_TIPO = { reportagem: 'Reportagem', opiniao: 'Opinião', editorial: 'Editorial', charge: 'Charge', arte: 'Arte', poesia: 'Poesia', cronica: 'Crônica', fotografia: 'Fotografia', pauta: 'Sugestão de pauta' };
 const hojeSP = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
 let ej = { data: null, itens: [], manchete: null, registro: null, catalogo: [] };
 
@@ -446,7 +446,10 @@ async function abrirColaboracao(c) {
     ${c.minibio ? `<p class="text-sm italic mt-1">${esc(c.minibio)}</p>` : ''}
     ${urls.length ? `<div class="grid grid-cols-2 gap-3 mt-4">${urls.map(u => `<a href="${esc(u.signedUrl)}" target="_blank"><img src="${esc(u.signedUrl)}" alt="" class="w-full border fio"></a>`).join('')}</div>` : ''}
     <div class="mt-5 whitespace-pre-wrap leading-relaxed ${c.tipo === 'poesia' ? 'italic' : ''}">${esc(c.texto)}</div>
-    ${c.status === 'pendente' ? `<div class="border-t fio mt-6 pt-4 space-y-3">
+    ${c.tipo === 'pauta' && c.status === 'pendente' ? `<div class="border-t fio mt-6 pt-4 flex flex-wrap gap-2">
+        <button type="button" class="btn" data-acao-colab="aceitar-pauta">Aceitar pauta (vai para apuração)</button>
+        <button type="button" class="btn-sec" data-acao-colab="recusar">Recusar</button></div>`
+    : c.status === 'pendente' ? `<div class="border-t fio mt-6 pt-4 space-y-3">
       ${['arte', 'fotografia'].includes(c.tipo) ? `<label class="campo"><span>Texto alternativo das imagens (obrigatório para publicar)</span><textarea id="colab-alt" rows="2" placeholder="Descreva o que a imagem mostra"></textarea></label>` : ''}
       <div class="flex flex-wrap gap-2">
         <button type="button" class="btn" data-acao-colab="publicar">Aprovar e publicar</button>
@@ -466,6 +469,10 @@ async function acaoColaboracao(c, acao, btn) {
     if (c.imagens.length) await sb.storage.from('colaboracoes').remove(c.imagens);
     const { error } = await sb.from('colaboracoes').delete().eq('id', c.id);
     return error ? falha(error, 'Erro ao excluir') : listarColaboracoes();
+  }
+  if (acao === 'aceitar-pauta') {
+    const { error } = await sb.from('colaboracoes').update({ status: 'aprovada' }).eq('id', c.id);
+    return error ? falha(error, 'Erro') : (toast('Pauta aceita. Ela fica em “Aprovadas” para a redação apurar.'), listarColaboracoes());
   }
   if (acao === 'recusar') {
     const { error } = await sb.from('colaboracoes').update({ status: 'recusada' }).eq('id', c.id);

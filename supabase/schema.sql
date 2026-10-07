@@ -59,7 +59,7 @@ alter table public.posts add constraint posts_secao_check
 -- O público só consegue INSERIR (status pendente). Ler, aprovar e apagar: só administradores.
 create table if not exists public.colaboracoes (
   id uuid primary key default gen_random_uuid(),
-  tipo text not null check (tipo in ('opiniao','poesia','cronica','arte','fotografia')),
+  tipo text not null,
   titulo text not null check (char_length(titulo) between 2 and 200),
   texto text not null default '' check (char_length(texto) <= 40000),
   assinatura text not null check (char_length(assinatura) between 2 and 80),
@@ -72,6 +72,8 @@ create table if not exists public.colaboracoes (
   criado_em timestamptz not null default now()
 );
 alter table public.colaboracoes enable row level security;
+alter table public.colaboracoes drop constraint if exists colaboracoes_tipo_check;
+alter table public.colaboracoes add constraint colaboracoes_tipo_check check (tipo in ('opiniao','poesia','cronica','arte','fotografia','pauta'));
 drop policy if exists "colab_envio_publico" on public.colaboracoes;
 create policy "colab_envio_publico" on public.colaboracoes for insert to anon, authenticated
   with check (status = 'pendente' and post_id is null and jsonb_array_length(imagens) <= 8);

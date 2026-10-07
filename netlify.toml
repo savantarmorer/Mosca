@@ -69,3 +69,8 @@
   for = "/colabore/*"
   [headers.values]
     Content-Security-Policy = "default-src 'self'; connect-src 'self' https://pvdznwgrbeuudzhuqicw.supabase.co; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+
+[[headers]]
+  for = "/pauta/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; connect-src 'self' https://pvdznwgrbeuudzhuqicw.supabase.co; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"

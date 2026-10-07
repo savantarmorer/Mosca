@@ -129,7 +129,7 @@ const RODAPE = `<footer class="max-w-6xl mx-auto px-4 border-t fio fio-duplo pt-
   <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
     <div><p class="display font-black text-2xl text-[color:var(--tinta)]">Mosca<span class="text-[color:var(--vinho)]">.</span></p><p class="mt-2 leading-relaxed">Jornalismo independente, sem dono e sem patrocinador.</p></div>
     <nav aria-label="Seções" class="flex flex-col gap-2">${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/">${esc(v.nome)}</a>`).join('')}</nav>
-    <nav aria-label="Participe" class="flex flex-col gap-2"><a href="/colabore/" class="text-[color:var(--vinho)] font-semibold">Publique no Mosca</a><a href="/denuncia/">Denúncia anônima</a><a href="/edicoes/">E-jornal</a><a href="/feed.xml">RSS</a></nav>
+    <nav aria-label="Participe" class="flex flex-col gap-2"><a href="/colabore/" class="text-[color:var(--vinho)] font-semibold">Publique no Mosca</a><a href="/pauta/">Sugira uma pauta</a><a href="/denuncia/">Denúncia anônima</a><a href="/edicoes/">E-jornal</a><a href="/feed.xml">RSS</a></nav>
     <nav aria-label="Institucional" class="flex flex-col gap-2"><a href="/quem-somos/">Quem somos</a><a href="/linha-editorial/">Linha editorial</a><a href="/contato/">Contato</a><a href="/termos/">Termos</a><a href="/privacidade/">Privacidade</a></nav>
   </div>
   <p class="mt-8 border-t border-[#d6d3cc] pt-4">© ${new Date().getFullYear()} Mosca. Jornalismo independente.</p>
@@ -381,6 +381,12 @@ function capa(posts, edicoes, ej) {
       </ol>
     </section>
     <section class="border fio p-5">
+      <p class="kicker">Pauta do leitor</p>
+      <h2 class="display font-bold text-xl mt-1">O que o Mosca deveria investigar?</h2>
+      <p class="text-sm mt-2 leading-relaxed">Um contrato estranho, uma obra parada, um abuso que ninguém noticia. Conte para a redação.</p>
+      <a href="/pauta/" class="sans inline-block mt-4 text-xs font-semibold uppercase tracking-wider border-b border-[color:var(--vinho)] text-[color:var(--vinho)] hover:opacity-70">Sugerir uma pauta →</a>
+    </section>
+    <section class="border fio p-5">
       <p class="kicker">Canal seguro</p>
       <h2 class="display font-bold text-xl mt-1">Envie uma pauta ou vazamento</h2>
       <p class="text-sm mt-2 leading-relaxed">O conteúdo é criptografado no seu aparelho e não pedimos identificação. Documentos são analisados pela redação antes de qualquer publicação.</p>
@@ -434,7 +440,7 @@ const ej = criarEjornal({ esc, url, SECOES, textoPuro, corpoHtml, SITE, head, cr
 edicoes.forEach((ed, i) => write(`edicao/${ed.data}/index.html`, ej.paginaEdicao(ed, edicoes[i - 1], edicoes[i + 1])));
 write('edicoes/index.html', ej.paginaArquivo(edicoes));
 write('index.html', capa(posts, edicoes, ej));
-const indexaveis = ['/', '/colabore/', ...[...autores.keys()].map(a => `/autor/${a}/`), ...PAGINAS.map(p => p.caminho), ...[...temas].filter(([, t]) => t.lista.length >= 2).map(([s]) => `/tema/${s}/`)];
+const indexaveis = ['/', '/colabore/', '/pauta/', ...[...autores.keys()].map(a => `/autor/${a}/`), ...PAGINAS.map(p => p.caminho), ...[...temas].filter(([, t]) => t.lista.length >= 2).map(([s]) => `/tema/${s}/`)];
 for (const s of Object.keys(SECOES)) { const [n, html] = secao(s, posts); write(`${s}/index.html`, html); if (n) indexaveis.push(`/${s}/`); }
 for (const p of posts) write(`${p.secao}/${p.slug}/index.html`, materia(p, posts));
 
