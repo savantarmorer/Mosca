@@ -5,7 +5,8 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = (s = '') => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const SECOES = { politica: 'Política', economia: 'Economia', plataformas: 'Plataformas & Poder', investigacoes: 'Investigações', documentos: 'Documentos' };
+const SECAO_DO_TIPO = { opiniao: 'opiniao', editorial: 'opiniao', charge: 'charges', arte: 'cultura' };
+const SECOES = { politica: 'Política', economia: 'Economia', plataformas: 'Plataformas & Poder', investigacoes: 'Investigações', documentos: 'Documentos', opiniao: 'Opinião', charges: 'Charges', cultura: 'Arte & Cultura' };
 
 let toastT;
 function toast(msg, erro) {
@@ -49,11 +50,11 @@ $('#sair').addEventListener('click', async () => { await sb.auth.signOut(); chav
 
 // ───────── abas ─────────
 function abrirAba(nome) {
-  if (!['materias', 'denuncias', 'config'].includes(nome)) nome = 'materias';
+  if (!['materias', 'ejornal', 'denuncias', 'config'].includes(nome)) nome = 'materias';
   $$('.aba').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === nome));
-  ['materias', 'denuncias', 'config'].forEach(a => $(`#aba-${a}`).classList.toggle('hidden', a !== nome));
+  ['materias', 'ejornal', 'denuncias', 'config'].forEach(a => $(`#aba-${a}`).classList.toggle('hidden', a !== nome));
   history.replaceState(null, '', '#' + nome);
-  ({ materias: listarMaterias, denuncias: listarDenuncias, config: carregarConfig })[nome]();
+  ({ materias: listarMaterias, ejornal: carregarEjornal, denuncias: listarDenuncias, config: carregarConfig })[nome]();
 }
 $$('.aba').forEach(b => b.addEventListener('click', () => abrirAba(b.dataset.aba)));
 
@@ -167,15 +168,17 @@ const localISO = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.g
 function atualizarSEO() {
   if (!slugManual) form.slug.value = slugify(form.titulo.value);
   const desc = form.descricao.value || form.linha_fina.value;
-  $('#url-final').textContent = `https://mosca.news/${form.secao.value}/${form.slug.value}/`;
+  const secaoFinal = SECAO_DO_TIPO[form.tipo.value] || form.secao.value;
+  $('#url-final').textContent = `https://mosca.news/${secaoFinal}/${form.slug.value}/`;
   $('#cont-desc').textContent = `(${form.descricao.value.length}/160)`;
   $('#cont-desc').style.color = form.descricao.value.length > 160 ? 'var(--vinho)' : '';
-  $('#g-secao').textContent = `${form.secao.value} › ${form.slug.value}`;
+  $('#g-secao').textContent = `${secaoFinal} › ${form.slug.value}`;
   $('#g-titulo').textContent = `${form.titulo.value || 'Título da matéria'} | Mosca`.slice(0, 70);
   $('#g-desc').textContent = (desc || 'A descrição aparece aqui. Use até 160 caracteres com as palavras que o leitor buscaria.').slice(0, 160);
 }
 form.slug.addEventListener('input', () => { slugManual = true; atualizarSEO(); });
 ['titulo', 'descricao', 'linha_fina', 'secao'].forEach(n => form[n].addEventListener('input', atualizarSEO));
+form.secao.addEventListener('change', atualizarSEO);
 
 function mostrarCapa(url) {
   form.capa_url.value = url || '';
@@ -190,7 +193,7 @@ $('#capa-arquivo').addEventListener('change', async e => {
 $('#capa-remover').addEventListener('click', () => mostrarCapa(''));
 
 async function abrirEditor(id) {
-  let p = { secao: 'politica', assinatura: 'Redação Mosca', formato: 'rich', conteudo: '', status: 'rascunho', secoes_extra: [], palavras_chave: [] };
+  let p = { tipo: 'reportagem', secao: 'politica', assinatura: 'Redação Mosca', formato: 'rich', conteudo: '', status: 'rascunho', secoes_extra: [], palavras_chave: [], galeria: [] };
   if (id) {
     const { data, error } = await sb.from('posts').select('*').eq('id', id).single();
     if (error) return falha(error, 'Erro ao abrir matéria');
@@ -198,7 +201,11 @@ async function abrirEditor(id) {
   }
   atual = p; slugManual = !!id;
   form.reset();
-  for (const k of ['kicker', 'titulo', 'linha_fina', 'secao', 'assinatura', 'capa_alt', 'capa_credito', 'slug', 'descricao']) form[k].value = p[k] || '';
+  for (const k of ['kicker', 'titulo', 'linha_fina', 'secao', 'assinatura', 'capa_alt', 'capa_credito', 'slug', 'descricao', 'colunista']) form[k].value = p[k] || '';
+  form.tipo.value = p.tipo || 'reportagem';
+  if (!form.secao.value) form.secao.value = 'politica';
+  galeriaAtual = Array.isArray(p.galeria) ? p.galeria.map(g => ({ ...g })) : [];
+  desenharGaleria(); ajustarTipo();
   if (!form.assinatura.value) form.assinatura.value = 'Redação Mosca';
   form.palavras_chave.value = (p.palavras_chave || []).join(', ');
   form.destaque.checked = !!p.destaque;
@@ -224,13 +231,16 @@ function coletar(status) {
     titulo: form.titulo.value.trim(),
     linha_fina: form.linha_fina.value.trim() || null,
     descricao: form.descricao.value.trim() || null,
-    secao: form.secao.value,
+    secao: SECAO_DO_TIPO[form.tipo.value] || form.secao.value,
     secoes_extra: $$('#secoes-extra input:checked').map(c => c.value).filter(v => v !== form.secao.value),
     assinatura: form.assinatura.value,
     palavras_chave: lista(form.palavras_chave.value),
     capa_url: form.capa_url.value || null,
     capa_alt: form.capa_alt.value.trim() || null,
     capa_credito: form.capa_credito.value.trim() || null,
+    tipo: form.tipo.value,
+    colunista: form.colunista.value.trim() || null,
+    galeria: galeriaAtual.filter(g => g.url),
     formato: formatoAtual,
     conteudo: lerConteudo(),
     destaque: form.destaque.checked,
@@ -246,7 +256,13 @@ form.addEventListener('submit', async e => {
   const status = acao === 'publicar' ? 'publicado' : acao === 'despublicar' ? 'rascunho' : atual.status === 'publicado' ? 'publicado' : 'rascunho';
   const dados = coletar(status);
   if (status === 'publicado') {
-    const faltando = [!dados.conteudo && 'texto', dados.capa_url && !dados.capa_alt && 'texto alternativo da capa'].filter(Boolean);
+    const faltando = [
+      !dados.conteudo && !['charge', 'arte'].includes(dados.tipo) && 'texto',
+      dados.tipo === 'charge' && !dados.capa_url && 'imagem da charge',
+      dados.tipo === 'opiniao' && !dados.colunista && 'nome do colunista',
+      dados.capa_url && !dados.capa_alt && 'texto alternativo da imagem',
+      dados.galeria.some(g => !g.alt) && 'texto alternativo de todas as imagens da galeria',
+    ].filter(Boolean);
     if (faltando.length) return toast(`Antes de publicar, preencha: ${faltando.join(', ')}.`, true);
   }
   $$('#editor button').forEach(b => (b.disabled = true));
@@ -287,6 +303,112 @@ ${d.linha_fina ? `<p class="text-xl leading-relaxed mt-4 text-[#333]">${esc(d.li
 ${d.capa_url ? `<figure class="grao mt-6"><img class="foto w-full" src="${esc(d.capa_url)}" alt="${esc(d.capa_alt || '')}"><figcaption class="sans text-[11px] mt-1">${esc(d.capa_credito || '')}</figcaption></figure>` : ''}
 <div class="corpo mt-8">${corpo}</div></article></body></html>`);
   w.document.close();
+});
+
+// ───────── tipo de conteúdo e galeria ─────────
+let galeriaAtual = [];
+function ajustarTipo() {
+  const t = form.tipo.value;
+  const fixa = SECAO_DO_TIPO[t];
+  $('#campo-colunista').classList.toggle('hidden', !['opiniao', 'charge', 'arte'].includes(t));
+  $('#rotulo-colunista').textContent = t === 'charge' ? 'Chargista' : t === 'arte' ? 'Artista / autor (opcional)' : 'Colunista';
+  $('#campo-secao').classList.toggle('hidden', !!fixa);
+  $('#campo-extra').classList.toggle('hidden', !!fixa);
+  $('#painel-galeria').classList.toggle('hidden', t !== 'arte');
+  $('#rotulo-capa').textContent = t === 'charge' ? 'Imagem da charge' : 'Imagem de capa';
+  $('#box-rich').closest('fieldset').querySelector('legend').textContent = t === 'charge' ? 'Texto (opcional)' : 'Texto';
+  $('#url-final').textContent = `https://mosca.news/${fixa || form.secao.value}/${form.slug.value}/`;
+}
+form.tipo.addEventListener('change', ajustarTipo);
+function desenharGaleria() {
+  $('#galeria-lista').innerHTML = galeriaAtual.map((g, i) => `<li class="border fio p-2 space-y-2">
+    <img src="${esc(g.url)}" alt="" class="w-full">
+    <input data-g="${i}" data-k="alt" value="${esc(g.alt || '')}" placeholder="Texto alternativo (obrigatório)" class="w-full border fio p-1 text-sm bg-white/60">
+    <input data-g="${i}" data-k="legenda" value="${esc(g.legenda || '')}" placeholder="Legenda / crédito" class="w-full border fio p-1 text-sm bg-white/60">
+    <div class="sans text-xs flex gap-3"><button type="button" class="btn-link" data-gmover="${i}" data-d="-1">↑</button><button type="button" class="btn-link" data-gmover="${i}" data-d="1">↓</button><button type="button" class="btn-link text-[color:var(--vinho)]" data-gremover="${i}">Remover</button></div>
+  </li>`).join('');
+}
+$('#galeria-lista').addEventListener('input', e => { const i = e.target.dataset.g; if (i != null) galeriaAtual[i][e.target.dataset.k] = e.target.value; });
+$('#galeria-lista').addEventListener('click', e => {
+  const r = e.target.dataset.gremover, m = e.target.dataset.gmover;
+  if (r != null) galeriaAtual.splice(r, 1);
+  else if (m != null) { const j = +m + +e.target.dataset.d; if (j < 0 || j >= galeriaAtual.length) return; [galeriaAtual[m], galeriaAtual[j]] = [galeriaAtual[j], galeriaAtual[m]]; }
+  else return;
+  desenharGaleria();
+});
+$('#galeria-arquivos').addEventListener('change', async e => {
+  for (const f of e.target.files) {
+    try { galeriaAtual.push({ url: await enviarMidia(f), alt: '', legenda: '' }); desenharGaleria(); }
+    catch (err) { falha(err, `Falha no upload de ${f.name}`); }
+  }
+  e.target.value = '';
+});
+
+// ───────── e-jornal ─────────
+const ROTULO_TIPO = { reportagem: 'Reportagem', opiniao: 'Opinião', editorial: 'Editorial', charge: 'Charge', arte: 'Arte' };
+const hojeSP = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+let ej = { data: null, itens: [], manchete: null, registro: null, catalogo: [] };
+
+async function carregarEjornal() {
+  if (!$('#ej-data').value) $('#ej-data').value = hojeSP();
+  const data = $('#ej-data').value;
+  const ini = new Date(`${data}T00:00:00-03:00`).toISOString(), fim = new Date(`${data}T23:59:59.999-03:00`).toISOString();
+  const [{ data: doDia, error: e1 }, { data: reg, error: e2 }, { data: catalogo }] = await Promise.all([
+    sb.from('posts').select('slug,titulo,tipo,secao,destaque,publicado_em').eq('status', 'publicado').gte('publicado_em', ini).lte('publicado_em', fim).order('publicado_em'),
+    sb.from('edicoes').select('*').eq('data', data).maybeSingle(),
+    sb.from('posts').select('slug,titulo,tipo,secao,publicado_em').eq('status', 'publicado').order('publicado_em', { ascending: false }).limit(60),
+  ]);
+  if (e1 || e2) return falha(e1 || e2, 'Erro ao carregar a edição (rode o schema.sql atualizado)');
+  const porSlug = new Map([...(catalogo || []), ...doDia].map(p => [p.slug, p]));
+  const ordem = { reportagem: 0, editorial: 1, opiniao: 2, charge: 3, arte: 4 };
+  ej = { data, registro: reg, catalogo: catalogo || [],
+    itens: reg?.itens?.length ? reg.itens.map(s => porSlug.get(s) || { slug: s, titulo: s + ' (não publicada ou do repositório)', tipo: 'reportagem' })
+      : [...doDia].sort((a, b) => (ordem[a.tipo] - ordem[b.tipo]) || (b.destaque - a.destaque)),
+    manchete: reg?.manchete || null };
+  if (!ej.manchete) ej.manchete = (ej.itens.find(p => p.tipo === 'reportagem') || ej.itens[0])?.slug || null;
+  $('#ej-titulo').value = reg?.titulo || '';
+  $('#ej-estado').innerHTML = reg ? (reg.status === 'publicada' ? '● <b>Personalizada e publicada</b>' : '○ Rascunho personalizado (o site ainda usa a montagem automática)') : 'Montagem automática (nenhum ajuste salvo)';
+  $('#ej-ver').href = `/edicao/${data}/`;
+  $('#ej-auto').classList.toggle('hidden', !reg);
+  desenharEjornal();
+}
+function desenharEjornal() {
+  $('#ej-itens').innerHTML = ej.itens.length ? ej.itens.map((p, i) => `<li class="py-3 border-b border-[#d6d3cc] flex items-center gap-3">
+    <span class="mono text-xs w-6 text-[color:var(--cinza)]">${i + 1}</span>
+    <label class="sans text-[11px] flex items-center gap-1 w-24 ${p.tipo !== 'reportagem' ? 'invisible' : ''}"><input type="radio" name="ej-manchete" value="${esc(p.slug)}" ${p.slug === ej.manchete ? 'checked' : ''}> Manchete</label>
+    <span class="flex-1"><span class="kicker">${ROTULO_TIPO[p.tipo] || ''}</span><br><span class="display font-bold">${esc(p.titulo)}</span></span>
+    <span class="sans text-xs flex gap-3"><button type="button" class="btn-link" data-ejm="${i}" data-d="-1" aria-label="Subir">↑</button><button type="button" class="btn-link" data-ejm="${i}" data-d="1" aria-label="Descer">↓</button><button type="button" class="btn-link text-[color:var(--vinho)]" data-ejr="${i}">Tirar</button></span>
+  </li>`).join('') : '<li class="py-4 italic text-[color:var(--cinza)]">Nenhuma matéria publicada neste dia. Adicione matérias abaixo para montar a edição.</li>';
+  const usados = new Set(ej.itens.map(p => p.slug));
+  $('#ej-adicionar').innerHTML = ej.catalogo.filter(p => !usados.has(p.slug)).map(p => `<option value="${esc(p.slug)}">${new Date(p.publicado_em).toLocaleDateString('pt-BR')} · ${ROTULO_TIPO[p.tipo] || ''} · ${esc(p.titulo)}</option>`).join('');
+}
+$('#ej-data').addEventListener('change', carregarEjornal);
+$('#ej-itens').addEventListener('change', e => { if (e.target.name === 'ej-manchete') ej.manchete = e.target.value; });
+$('#ej-itens').addEventListener('click', e => {
+  const m = e.target.dataset.ejm, r = e.target.dataset.ejr;
+  if (r != null) ej.itens.splice(r, 1);
+  else if (m != null) { const j = +m + +e.target.dataset.d; if (j < 0 || j >= ej.itens.length) return; [ej.itens[m], ej.itens[j]] = [ej.itens[j], ej.itens[m]]; }
+  else return;
+  desenharEjornal();
+});
+$('#ej-adicionar-btn').addEventListener('click', () => {
+  const p = ej.catalogo.find(x => x.slug === $('#ej-adicionar').value);
+  if (p) { ej.itens.push(p); desenharEjornal(); }
+});
+async function salvarEdicao(status) {
+  if (!ej.itens.length) return toast('A edição precisa de pelo menos uma matéria.', true);
+  const { error } = await sb.from('edicoes').upsert({ data: ej.data, titulo: $('#ej-titulo').value.trim() || null, itens: ej.itens.map(p => p.slug), manchete: ej.manchete, status, atualizado_em: new Date().toISOString() });
+  if (error) return falha(error, 'Erro ao salvar a edição');
+  if (status === 'publicada') await atualizarSite(); else toast('Rascunho da edição salvo.');
+  carregarEjornal();
+}
+$('#ej-publicar').addEventListener('click', () => salvarEdicao('publicada'));
+$('#ej-rascunho').addEventListener('click', () => salvarEdicao('rascunho'));
+$('#ej-auto').addEventListener('click', async () => {
+  if (!confirm('Descartar os ajustes desta edição e voltar à montagem automática?')) return;
+  const { error } = await sb.from('edicoes').delete().eq('data', ej.data);
+  if (error) return falha(error, 'Erro');
+  await atualizarSite(); carregarEjornal();
 });
 
 // ───────── denúncias ─────────

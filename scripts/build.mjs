@@ -5,6 +5,7 @@ import path from 'node:path';
 import { SUPABASE_URL, SUPABASE_KEY } from '../assets/config.js';
 import { processarCapa } from './imagens.mjs';
 import { PAGINAS, EMAIL } from './institucional.mjs';
+import { montarEdicoes, criarEjornal, anoRomano } from './ejornal.mjs';
 
 const SITE = 'https://mosca.news';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -13,8 +14,13 @@ const SECOES = {
   economia: { nome: 'Economia', desc: 'Análises sobre elite financeira, contratos, concentração de renda e interesses econômicos por trás das decisões públicas.' },
   plataformas: { nome: 'Plataformas & Poder', desc: 'Investigações sobre big techs, algoritmos, moderação de conteúdo e o alcance de vozes políticas nas redes.' },
   investigacoes: { nome: 'Investigações', desc: 'Reportagens investigativas da Mosca, baseadas em documentos, dados públicos e registros verificáveis.' },
+  opiniao: { nome: 'Opinião', desc: 'Editoriais e colunas de opinião do Mosca: análise e posicionamento sobre o poder no Brasil.' },
+  charges: { nome: 'Charges', desc: 'A charge do dia e o arquivo de charges do Mosca: humor gráfico sobre política e poder.' },
+  cultura: { nome: 'Arte & Cultura', desc: 'Crítica, ensaios visuais, ilustração e cultura no Mosca.' },
   documentos: { nome: 'Documentos', desc: 'Acervo de documentos-fonte, transcrições e registros usados nas reportagens da Mosca.' },
 };
+const SECAO_DO_TIPO = { opiniao: 'opiniao', editorial: 'opiniao', charge: 'charges', arte: 'cultura' };
+const OPINIAO = new Set(['opiniao', 'editorial']);
 
 const esc = (s = '') => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const abs = u => (!u ? '' : /^https?:/.test(u) ? u : SITE + u);
@@ -49,8 +55,20 @@ async function carregar() {
     else throw new Error(`Supabase respondeu ${r.status} — build interrompido para não publicar o site sem as matérias.`);
   }
   const porSlug = new Map();
-  for (const p of [...locais, ...remotos]) if (p.status === 'publicado' && SECOES[p.secao]) porSlug.set(p.slug, p);
+  for (const p of [...locais, ...remotos]) {
+    p.tipo = p.tipo || 'reportagem';
+    if (SECAO_DO_TIPO[p.tipo]) p.secao = SECAO_DO_TIPO[p.tipo];
+    p.galeria = Array.isArray(p.galeria) ? p.galeria : [];
+    if (p.status === 'publicado' && SECOES[p.secao]) porSlug.set(p.slug, p);
+  }
   return [...porSlug.values()].sort((a, b) => new Date(b.publicado_em) - new Date(a.publicado_em));
+}
+async function carregarEdicoes() {
+  if (!SUPABASE_URL || !SUPABASE_KEY || process.env.MOSCA_OFFLINE) return [];
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/edicoes?status=eq.publicada&select=*`, { headers: { apikey: SUPABASE_KEY } });
+  if (r.ok) return r.json();
+  console.warn(`Supabase: tabela edicoes indisponível (${r.status}); edições montadas automaticamente.`);
+  return [];
 }
 
 // ───────── pedaços comuns ─────────
@@ -96,11 +114,12 @@ const TOPO = `<header class="border-b fio">
 </header>`;
 const NAV = `<nav aria-label="Seções" class="sans text-xs font-semibold uppercase tracking-wider border-y fio fio-duplo py-2 flex flex-wrap justify-center gap-x-6 gap-y-1">
     ${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/" class="hover:text-[color:var(--vinho)]">${esc(v.nome)}</a>`).join('\n    ')}
+    <a href="/edicoes/" class="hover:text-[color:var(--vinho)]">E-jornal</a>
     <a href="/denuncia/" class="text-[color:var(--vinho)]">Envie uma pauta ▸</a>
   </nav>`;
 const RODAPE = `<footer class="max-w-6xl mx-auto px-4 border-t fio fio-duplo py-6 sans text-xs text-[color:var(--cinza)] flex flex-wrap gap-4 justify-between">
   <span>© ${new Date().getFullYear()} Mosca. Jornalismo independente.</span>
-  <nav aria-label="Rodapé" class="flex flex-wrap gap-4">${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/">${esc(v.nome)}</a>`).join('')}<a href="/quem-somos/">Quem somos</a><a href="/linha-editorial/">Linha editorial</a><a href="/contato/">Contato</a><a href="/denuncia/">Canal anônimo</a><a href="/termos/">Termos</a><a href="/privacidade/">Privacidade</a><a href="/feed.xml">RSS</a></nav>
+  <nav aria-label="Rodapé" class="flex flex-wrap gap-4">${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/">${esc(v.nome)}</a>`).join('')}<a href="/edicoes/">E-jornal</a><a href="/quem-somos/">Quem somos</a><a href="/linha-editorial/">Linha editorial</a><a href="/contato/">Contato</a><a href="/denuncia/">Canal anônimo</a><a href="/termos/">Termos</a><a href="/privacidade/">Privacidade</a><a href="/feed.xml">RSS</a></nav>
 </footer>
 </body>
 </html>
@@ -109,7 +128,7 @@ const RODAPE = `<footer class="max-w-6xl mx-auto px-4 border-t fio fio-duplo py-
 function img(p, cls, prioridade, sizes = '(min-width: 768px) 720px, 100vw') {
   if (!p.capa_url) return '';
   const i = p._img;
-  const atrib = `class="foto ${cls}" alt="${esc(p.capa_alt || '')}" ${prioridade ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"`;
+  const atrib = `class="${p.tipo === 'charge' || p.tipo === 'arte' ? '' : 'foto '}${cls}" alt="${esc(p.capa_alt || '')}" ${prioridade ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"`;
   if (!i) return `<img ${atrib} src="${esc(p.capa_url)}"${p.capa_largura ? ` width="${p.capa_largura}" height="${p.capa_altura}"` : ''}>`;
   return `<picture><source type="image/avif" srcset="${i.avif}" sizes="${sizes}"><source type="image/webp" srcset="${i.webp}" sizes="${sizes}"><img ${atrib} src="${i.src}" width="${i.largura}" height="${i.altura}"></picture>`;
 }
@@ -128,28 +147,35 @@ function compartilhar(p) {
 const SCRIPT_COMPARTILHAR = `<script>document.addEventListener('click',function(e){var b=e.target.closest('[data-copiar]');if(!b)return;var u=b.getAttribute('data-copiar');if(navigator.share&&matchMedia('(pointer:coarse)').matches){navigator.share({url:u,title:document.title}).catch(function(){});return}navigator.clipboard.writeText(u).then(function(){b.textContent='Link copiado';setTimeout(function(){b.textContent='Copiar link'},2000)})});</script>`;
 const SWG = `<script async type="application/javascript" src="https://news.google.com/swg/js/v1/swg-basic.js"></script>
 <script>(self.SWG_BASIC = self.SWG_BASIC || []).push(function (basicSubscriptions) { basicSubscriptions.init({ type: "NewsArticle", isPartOfType: ["Product"], isPartOfProductId: "${SWG_ID}", clientOptions: { theme: "light", lang: "pt-BR" } }); });</script>`;
-const kicker = p => esc(p.kicker || SECOES[p.secao].nome);
+const ROTULO = { opiniao: 'Opinião', editorial: 'Editorial', charge: 'Charge', arte: 'Arte & Cultura' };
+const kicker = p => esc(p.kicker || ROTULO[p.tipo] || SECOES[p.secao].nome);
+const autor = p => OPINIAO.has(p.tipo) || p.tipo === 'charge' || p.tipo === 'arte' ? (p.tipo === 'editorial' ? 'Editorial do Mosca' : p.colunista || p.assinatura || 'Redação Mosca') : p.assinatura || 'Redação Mosca';
+function galeria(p) {
+  if (!p.galeria.length) return '';
+  return `<div class="galeria grid ${p.galeria.length > 1 ? 'sm:grid-cols-2' : ''} gap-6 my-10">${p.galeria.map(g => `<figure><img src="${esc(g.url)}" alt="${esc(g.alt || '')}" loading="lazy" decoding="async" class="w-full">${g.legenda ? `<figcaption class="sans text-xs text-[color:var(--cinza)] mt-2 leading-relaxed">${esc(g.legenda)}</figcaption>` : ''}</figure>`).join('')}</div>`;
+}
 
 // ───────── matéria ─────────
 function materia(p, todos) {
   const s = SECOES[p.secao];
-  const desc = p.descricao || p.linha_fina || textoPuro(corpoHtml(p)).slice(0, 155);
+  const desc = p.descricao || p.linha_fina || textoPuro(corpoHtml(p)).slice(0, 155) || `${ROTULO[p.tipo] || 'Matéria'}: ${p.titulo}`;
   const relacionadas = todos.filter(o => o !== p && (o.secao === p.secao || (o.secoes_extra || []).includes(p.secao))).slice(0, 3);
   const og = p._img?.og || p.og_imagem || p.capa_url || '/assets/img/og-default.jpg';
   const imagens = [...new Set([p._img?.og, p.og_imagem, p._img?.src, p.capa_url].filter(Boolean).map(abs))];
   const temas = (p.palavras_chave || []).map(k => [k, slugify(k)]).filter(([, s]) => s);
   const ld = [{
-    '@context': 'https://schema.org', '@type': 'NewsArticle',
+    '@context': 'https://schema.org', '@type': OPINIAO.has(p.tipo) ? 'OpinionNewsArticle' : 'NewsArticle',
     mainEntityOfPage: { '@type': 'WebPage', '@id': SITE + url(p) },
     headline: (p.titulo_seo || p.titulo).slice(0, 110), alternativeHeadline: p.linha_fina || undefined, description: desc,
     image: imagens.length ? imagens : [SITE + '/assets/img/og-default.jpg'],
     datePublished: iso(p.publicado_em), dateModified: iso(p.atualizado_em || p.publicado_em),
     articleSection: s.nome, inLanguage: 'pt-BR', keywords: p.palavras_chave || [], wordCount: textoPuro(corpoHtml(p)).split(' ').length,
-    author: { '@type': 'Organization', name: p.assinatura || 'Redação Mosca', url: SITE + '/' },
+    author: p.tipo === 'opiniao' || ((p.tipo === 'charge' || p.tipo === 'arte') && p.colunista) ? { '@type': 'Person', name: autor(p) } : { '@type': 'Organization', name: autor(p), url: SITE + '/' },
     publisher: ORG, isAccessibleForFree: true,
     isPartOf: { '@type': ['CreativeWork', 'Product'], name: 'Mosca', productID: SWG_ID },
     about: temas.map(([k]) => ({ '@type': 'Thing', name: k })),
   }, crumbs([['Início', '/'], [s.nome, `/${p.secao}/`], [p.titulo, null]])];
+  if (p.tipo === 'charge' && p.capa_url) ld.push({ '@context': 'https://schema.org', '@type': 'ImageObject', contentUrl: abs(p._img?.src || p.capa_url), name: p.titulo, caption: p.capa_alt, creator: { '@type': p.colunista ? 'Person' : 'Organization', name: autor(p) }, datePublished: iso(p.publicado_em), creditText: autor(p), copyrightNotice: 'Mosca' });
   const extra = [
     `<meta property="article:published_time" content="${iso(p.publicado_em)}">`,
     `<meta property="article:modified_time" content="${iso(p.atualizado_em || p.publicado_em)}">`,
@@ -169,20 +195,22 @@ ${TOPO}
     <h1 class="display font-black text-4xl md:text-5xl leading-[1.06] mt-2">${esc(p.titulo)}</h1>
     ${p.linha_fina ? `<p class="text-xl leading-relaxed mt-4 text-[#333]">${esc(p.linha_fina)}</p>` : ''}
     <div class="sans text-xs border-y fio mt-6 py-2 flex flex-wrap gap-x-5 gap-y-1">
-      <span class="font-semibold">${esc(p.assinatura || 'Redação Mosca')}</span>
+      <span class="font-semibold">${p.tipo === 'opiniao' ? 'Por ' : ''}${esc(autor(p))}</span>
       <time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)} · ${hora(p.publicado_em).replace(':', 'h')}</time>
       <a href="/${p.secao}/">${esc(s.nome)}</a>
       <span class="text-[color:var(--cinza)]">${minutos(p)} min de leitura</span>
     </div>
     <div class="mt-3">${compartilhar(p)}</div>
   </header>
-  ${p.capa_url ? `<figure class="grao mt-6 -mx-4 sm:mx-0">
-    ${img(p, 'w-full', true)}
+  ${p.tipo === 'opiniao' ? `<p class="sans text-xs italic text-[color:var(--cinza)] mt-4">Os textos de opinião refletem a visão de quem assina e não necessariamente a da redação.</p>` : ''}
+  ${p.capa_url ? `<figure class="${p.tipo === 'charge' ? 'charge mt-8' : 'grao mt-6 -mx-4 sm:mx-0'}">
+    ${img(p, p.tipo === 'charge' ? 'w-full border fio' : 'w-full', true)}
     ${p.capa_credito ? `<figcaption class="sans text-[11px] text-[color:var(--cinza)] mt-1 px-4 sm:px-0">${esc(p.capa_credito)}</figcaption>` : ''}
   </figure>` : ''}
-  <div class="corpo mt-8">
+  <div class="corpo mt-8${p.tipo === 'charge' || p.tipo === 'arte' ? ' sem-capitular' : ''}">
 ${corpoHtml(p)}
   </div>
+  ${galeria(p)}
   ${p.atualizado_em && new Date(p.atualizado_em) - new Date(p.publicado_em) > 3600e3 ? `<p class="sans text-xs text-[color:var(--cinza)] mt-8">Atualizado em <time datetime="${iso(p.atualizado_em)}">${dataCurta(p.atualizado_em)}, ${hora(p.atualizado_em)}</time>.</p>` : ''}
   <div class="border-t fio mt-10 pt-4">${compartilhar(p)}</div>
   ${temas.length ? `<nav aria-label="Temas" class="mt-6 sans text-xs flex flex-wrap gap-2">${temas.map(([k, s]) => `<a class="border fio px-2 py-1 hover:border-[color:var(--vinho)] hover:text-[color:var(--vinho)]" href="/tema/${s}/">${esc(k)}</a>`).join('')}</nav>` : ''}
@@ -233,18 +261,24 @@ ${RODAPE}`;
 }
 
 // ───────── capa ─────────
-function capa(posts) {
-  const [manchete, ...resto] = [...posts.filter(p => p.destaque), ...posts.filter(p => !p.destaque)];
+function capa(posts, edicoes, ej) {
+  const reps = posts.filter(p => p.tipo === 'reportagem');
+  const [manchete, ...resto] = [...reps.filter(p => p.destaque), ...reps.filter(p => !p.destaque)];
   const foco = resto.slice(0, 2), mais = resto.slice(2, 8);
+  const opinioes = posts.filter(p => OPINIAO.has(p.tipo)).slice(0, 3);
+  const charge = posts.find(p => p.tipo === 'charge');
+  const cultura = posts.filter(p => p.tipo === 'arte').slice(0, 4);
+  const ed = edicoes.at(-1);
   const agora = new Date();
   const card = (p, grande) => `<a class="manchete block" href="${url(p)}"><p class="kicker">${kicker(p)}</p><h3 class="display font-bold ${grande ? 'text-2xl' : 'text-xl'} leading-tight mt-1">${esc(p.titulo)}</h3>${grande && p.linha_fina ? `<p class="mt-2 text-[15px] leading-relaxed">${esc(p.linha_fina)}</p>` : ''}</a>`;
   return head({
     titulo: 'Mosca — Jornalismo investigativo independente', desc: 'Mosca: jornalismo investigativo independente. Denúncias, análises de conjuntura e documentos sobre poder político e econômico no Brasil.', caminho: '/',
+    extra: '<link rel="stylesheet" href="/assets/ejornal.css">',
     ld: [{ '@context': 'https://schema.org', ...ORG, inLanguage: 'pt-BR' }, { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Mosca', url: SITE + '/', inLanguage: 'pt-BR' }],
   }) + `
 <header class="max-w-6xl mx-auto px-4">
-  <div class="sans text-[11px] uppercase tracking-widest flex justify-between py-2 border-b fio text-[color:var(--cinza)]">
-    <span>${dataLonga(agora)}</span><span class="hidden sm:inline">Brasília</span>
+  <div class="sans text-[11px] uppercase tracking-widest flex justify-between gap-4 py-2 border-b fio text-[color:var(--cinza)]">
+    <span>${dataLonga(agora)}</span><span class="hidden sm:inline">${ed ? `Ano ${anoRomano(agora)} · Nº ${ed.numero} · ` : ''}Brasília</span>
   </div>
   <div class="py-6 text-center">
     <a href="/" class="display font-black text-6xl md:text-7xl tracking-tight">Mosca<span class="text-[color:var(--vinho)]">.</span></a>
@@ -263,7 +297,7 @@ function capa(posts) {
       ${manchete.linha_fina ? `<p class="text-lg leading-relaxed mt-4">${esc(manchete.linha_fina)}</p>` : ''}
     </a>
     <p class="sans text-[11px] uppercase tracking-wider mt-3 text-[color:var(--cinza)]">${esc(manchete.assinatura || 'Redação Mosca')} · ${dataCurta(manchete.publicado_em)} · ${minutos(manchete)} min de leitura</p>
-  </article>` : '<p class="italic">Nenhuma matéria publicada ainda.</p>'}
+  </article>` : '<p class="italic">Nenhuma reportagem publicada ainda.</p>'}
   ${foco.length ? `<section aria-labelledby="em-foco" class="mt-10 border-t fio pt-4">
     <h2 id="em-foco" class="sans text-xs font-bold uppercase tracking-[.2em] mb-5">Em Foco</h2>
     <div class="grid md:grid-cols-5 gap-6">
@@ -271,10 +305,32 @@ function capa(posts) {
       ${foco[1] ? `<div class="md:col-span-2">${card(foco[1], false)}</div>` : ''}
     </div>
   </section>` : ''}
+  ${opinioes.length ? `<section aria-labelledby="opiniao" class="mt-10 border-t-[3px] border-double fio pt-4">
+    <div class="flex items-baseline justify-between"><h2 id="opiniao" class="display font-black text-3xl">Opinião</h2><a href="/opiniao/" class="sans text-[11px] font-semibold uppercase tracking-wider hover:text-[color:var(--vinho)]">Todas as colunas →</a></div>
+    <div class="grid md:grid-cols-${Math.min(opinioes.length, 3)} gap-6 mt-4">${opinioes.map((p, i) => `<a href="${url(p)}" class="manchete block ${i ? 'md:border-l fio md:pl-6' : ''}">
+      <p class="kicker">${p.tipo === 'editorial' ? 'Editorial' : esc(autor(p))}</p>
+      <h3 class="display font-bold text-xl leading-tight mt-1 ${p.tipo === 'editorial' ? 'italic' : ''}">${esc(p.titulo)}</h3>
+      ${p.linha_fina ? `<p class="mt-2 text-[15px] leading-relaxed">${esc(p.linha_fina)}</p>` : ''}</a>`).join('')}</div>
+  </section>` : ''}
   ${mais.length ? `<section class="mt-10 border-t fio pt-4"><h2 class="sans text-xs font-bold uppercase tracking-[.2em] mb-2">Mais reportagens</h2>
     <ul class="divide-y divide-[#d6d3cc]">${mais.map(p => `<li class="py-4">${card(p, false)}</li>`).join('')}</ul></section>` : ''}
   </div>
-  <aside class="lg:col-span-4 space-y-8" aria-label="Últimas atualizações">
+  <aside class="lg:col-span-4 space-y-8" aria-label="Destaques">
+    ${ed ? `<section class="border fio p-5 bg-[#efeadf]">
+      <p class="kicker">E-jornal · Edição nº ${ed.numero}</p>
+      <h2 class="display font-bold text-xl mt-1">Leia o Mosca como um jornal</h2>
+      <a href="/edicao/${ed.data}/" class="block mt-4 group" aria-label="Abrir o e-jornal de ${esc(ej.dataExtenso(ed.data))}">${ej.miniCapa(ed)}</a>
+      <div class="flex justify-between items-center mt-4 sans text-xs font-semibold uppercase tracking-wider">
+        <a href="/edicao/${ed.data}/" class="bg-[color:var(--tinta)] text-[color:var(--papel)] px-4 py-2 hover:bg-[color:var(--vinho)]">Ler o e-jornal ▸</a>
+        <a href="/edicoes/" class="hover:text-[color:var(--vinho)]">Edições anteriores</a>
+      </div>
+    </section>` : ''}
+    ${charge ? `<section aria-labelledby="charge-dia">
+      <h2 id="charge-dia" class="sans text-xs font-bold uppercase tracking-[.2em] border-b fio pb-2">Charge do dia</h2>
+      <a href="${url(charge)}" class="block mt-3">${img(charge, 'w-full border fio', false, '(min-width: 1024px) 360px, 100vw')}</a>
+      <p class="mt-2 text-sm"><a href="${url(charge)}" class="font-semibold hover:underline">${esc(charge.titulo)}</a>${charge.colunista ? ` <span class="text-[color:var(--cinza)]">— ${esc(charge.colunista)}</span>` : ''}</p>
+      <a href="/charges/" class="sans text-[11px] font-semibold uppercase tracking-wider hover:text-[color:var(--vinho)]">Arquivo de charges →</a>
+    </section>` : ''}
     <section>
       <h2 class="sans text-xs font-bold uppercase tracking-[.2em] border-b fio pb-2">Últimas Atualizações</h2>
       <ol class="mt-3 divide-y divide-[#d6d3cc]">
@@ -288,6 +344,10 @@ function capa(posts) {
       <a href="/denuncia/" class="sans inline-block mt-4 text-xs font-semibold uppercase tracking-wider border-b border-[color:var(--vinho)] text-[color:var(--vinho)] hover:opacity-70">Acessar canal anônimo →</a>
     </section>
   </aside>
+  ${cultura.length ? `<section aria-labelledby="cultura" class="lg:col-span-12 border-t-[3px] border-double fio pt-4">
+    <div class="flex items-baseline justify-between"><h2 id="cultura" class="display font-black text-3xl">Arte &amp; Cultura</h2><a href="/cultura/" class="sans text-[11px] font-semibold uppercase tracking-wider hover:text-[color:var(--vinho)]">Ver tudo →</a></div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">${cultura.map(p => `<a href="${url(p)}" class="manchete block">${p.capa_url ? img(p, 'w-full aspect-[4/3] object-cover', false, '(min-width: 1024px) 270px, 50vw') : ''}<p class="kicker mt-3">${kicker(p)}</p><h3 class="display font-bold text-lg leading-tight mt-1">${esc(p.titulo)}</h3></a>`).join('')}</div>
+  </section>` : ''}
 </main>
 ${RODAPE}`;
 }
@@ -303,14 +363,15 @@ ${TOPO}
 <main class="max-w-6xl mx-auto px-4 py-10">
 <nav aria-label="Trilha" class="sans text-[11px] uppercase tracking-wider text-[color:var(--cinza)]"><a href="/">Início</a> / <span>${esc(s.nome)}</span></nav>
 <header class="border-b fio fio-duplo pt-4 pb-4 mt-3"><h1 class="display font-black text-5xl">${esc(s.nome)}</h1><p class="mt-2 text-lg text-[#333] max-w-2xl">${esc(s.desc)}</p></header>
-<ol class="max-w-3xl">${lista.length ? lista.map(p => `<li class="py-6 border-b border-[#d6d3cc] grid sm:grid-cols-[1fr_180px] gap-5"><div><a class="manchete block" href="${url(p)}"><p class="kicker">${kicker(p)}</p><h2 class="display font-bold text-2xl md:text-3xl leading-tight mt-1">${esc(p.titulo)}</h2>${p.linha_fina ? `<p class="mt-2 leading-relaxed">${esc(p.linha_fina)}</p>` : ''}</a><p class="sans text-[11px] uppercase tracking-wider mt-2 text-[color:var(--cinza)]"><time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)}</time> · ${esc(p.assinatura || 'Redação Mosca')}</p></div>${p.capa_url ? `<a href="${url(p)}" class="grao hidden sm:block self-start" tabindex="-1" aria-hidden="true">${img(p, 'w-full aspect-[4/3] object-cover', false)}</a>` : ''}</li>`).join('') : '<li class="py-6 text-[color:var(--cinza)] italic">Nenhuma publicação nesta seção ainda.</li>'}</ol>
+${slug === 'charges' && lista.length ? `<ol class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">${lista.map(p => `<li><a href="${url(p)}" class="manchete block">${img(p, 'w-full border fio', false, '(min-width: 1024px) 360px, 100vw')}<h2 class="display font-bold text-xl leading-tight mt-3">${esc(p.titulo)}</h2></a><p class="sans text-[11px] uppercase tracking-wider mt-1 text-[color:var(--cinza)]"><time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)}</time>${p.colunista ? ` · ${esc(p.colunista)}` : ''}</p></li>`).join('')}</ol>` : `<ol class="max-w-3xl">${lista.length ? lista.map(p => `<li class="py-6 border-b border-[#d6d3cc] grid sm:grid-cols-[1fr_180px] gap-5"><div><a class="manchete block" href="${url(p)}"><p class="kicker">${kicker(p)}</p><h2 class="display font-bold text-2xl md:text-3xl leading-tight mt-1">${esc(p.titulo)}</h2>${p.linha_fina ? `<p class="mt-2 leading-relaxed">${esc(p.linha_fina)}</p>` : ''}</a><p class="sans text-[11px] uppercase tracking-wider mt-2 text-[color:var(--cinza)]"><time datetime="${iso(p.publicado_em)}">${dataCurta(p.publicado_em)}</time> · ${esc(autor(p))}</p></div>${p.capa_url && p.tipo !== 'opiniao' && p.tipo !== 'editorial' ? `<a href="${url(p)}" class="grao hidden sm:block self-start" tabindex="-1" aria-hidden="true">${img(p, 'w-full aspect-[4/3] object-cover', false)}</a>` : ''}</li>`).join('') : '<li class="py-6 text-[color:var(--cinza)] italic">Nenhuma publicação nesta seção ainda.</li>'}</ol>`}
 </main>
 ${RODAPE}`];
 }
 
 // ───────── execução ─────────
 const posts = await carregar();
-for (const s of [...Object.keys(SECOES), 'tema']) fs.rmSync(path.join(ROOT, s), { recursive: true, force: true });
+const edicoesPers = await carregarEdicoes();
+for (const s of [...Object.keys(SECOES), 'tema', 'edicao', 'edicoes']) fs.rmSync(path.join(ROOT, s), { recursive: true, force: true });
 for (const p of posts) p._img = await processarCapa(ROOT, p);
 for (const pg of PAGINAS) write(`${pg.caminho.slice(1)}index.html`, simples(pg));
 write('404.html', simples({ caminho: '/404.html', titulo: 'Página não encontrada', desc: 'Página não encontrada.', index: false,
@@ -322,7 +383,11 @@ for (const p of posts) for (const k of p.palavras_chave || []) {
   temas.get(s).lista.push(p);
 }
 for (const [s, t] of temas) write(`tema/${s}/index.html`, tema(t.nome, s, t.lista));
-write('index.html', capa(posts));
+const edicoes = montarEdicoes(posts, edicoesPers);
+const ej = criarEjornal({ esc, url, SECOES, textoPuro, corpoHtml, SITE, head, crumbs, TOPO, RODAPE, dataCurta });
+edicoes.forEach((ed, i) => write(`edicao/${ed.data}/index.html`, ej.paginaEdicao(ed, edicoes[i - 1], edicoes[i + 1])));
+write('edicoes/index.html', ej.paginaArquivo(edicoes));
+write('index.html', capa(posts, edicoes, ej));
 const indexaveis = ['/', ...PAGINAS.map(p => p.caminho), ...[...temas].filter(([, t]) => t.lista.length >= 2).map(([s]) => `/tema/${s}/`)];
 for (const s of Object.keys(SECOES)) { const [n, html] = secao(s, posts); write(`${s}/index.html`, html); if (n) indexaveis.push(`/${s}/`); }
 for (const p of posts) write(`${p.secao}/${p.slug}/index.html`, materia(p, posts));
@@ -350,7 +415,7 @@ write('feed.xml', `<?xml version="1.0" encoding="UTF-8"?>
 ${posts.slice(0, 30).map(p => `<item><title>${esc(p.titulo)}</title><link>${SITE}${url(p)}</link><guid isPermaLink="true">${SITE}${url(p)}</guid><pubDate>${new Date(p.publicado_em).toUTCString()}</pubDate><category>${esc(SECOES[p.secao].nome)}</category><description>${esc(p.descricao || p.linha_fina || '')}</description></item>`).join('\n')}
 </channel></rss>
 `);
-console.log(`Mosca: ${posts.length} matéria(s), ${temas.size} tema(s), ${recentes.length} no news-sitemap.`);
+console.log(`Mosca: ${posts.length} matéria(s), ${edicoes.length} edição(ões), ${temas.size} tema(s), ${recentes.length} no news-sitemap.`);
 
 // IndexNow (Bing, Yandex, Seznam…): avisa as URLs novas a cada deploy de produção.
 if (process.env.CONTEXT === 'production') {

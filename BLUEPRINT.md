@@ -5,6 +5,7 @@
 scripts/build.mjs        Gera capa, seções, matérias, sitemaps e RSS a cada deploy (Netlify)
 content/posts/*.json     Matérias guardadas no repositório (ex.: 001)
 admin/                   Painel da redação (login Supabase, editor, denúncias, configuração)
+scripts/ejornal.mjs      E-jornal: edições diárias em formato de jornal (/edicao/AAAA-MM-DD/, /edicoes/)
 denuncia/                Canal anônimo (criptografia PGP no navegador → Supabase Storage)
 supabase/schema.sql      Tabelas, permissões (RLS) e buckets — rodar no SQL Editor
 assets/config.js         URL e chave publishable do Supabase (públicas)

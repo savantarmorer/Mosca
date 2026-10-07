@@ -41,6 +41,7 @@
   <section id="tela-painel" class="hidden">
     <nav class="sans text-xs font-semibold uppercase tracking-wider border-b fio flex gap-6 mb-6" role="tablist">
       <button class="aba" data-aba="materias" aria-selected="true">Matérias</button>
+      <button class="aba" data-aba="ejornal">E-jornal</button>
       <button class="aba" data-aba="denuncias">Denúncias</button>
       <button class="aba" data-aba="config">Configuração</button>
     </nav>
@@ -103,13 +104,19 @@
           <aside class="space-y-5">
             <div class="painel">
               <h2>Publicação</h2>
-              <label class="campo"><span>Seção principal</span>
+              <label class="campo"><span>Tipo</span>
+                <select name="tipo">
+                  <option value="reportagem">Reportagem</option><option value="opiniao">Opinião (coluna)</option>
+                  <option value="editorial">Editorial</option><option value="charge">Charge</option><option value="arte">Arte &amp; Cultura</option>
+                </select></label>
+              <label class="campo" id="campo-colunista"><span id="rotulo-colunista">Colunista</span><input name="colunista" placeholder="Nome ou pseudônimo"></label>
+              <label class="campo" id="campo-secao"><span>Seção principal</span>
                 <select name="secao">
                   <option value="politica">Política</option><option value="economia">Economia</option>
                   <option value="plataformas">Plataformas &amp; Poder</option><option value="investigacoes">Investigações</option>
                   <option value="documentos">Documentos</option>
                 </select></label>
-              <fieldset class="campo"><span>Também listar em</span>
+              <fieldset class="campo" id="campo-extra"><span>Também listar em</span>
                 <div class="sans text-xs grid grid-cols-2 gap-1 mt-1" id="secoes-extra">
                   <label><input type="checkbox" value="politica"> Política</label><label><input type="checkbox" value="economia"> Economia</label>
                   <label><input type="checkbox" value="plataformas"> Plataformas</label><label><input type="checkbox" value="investigacoes"> Investigações</label>
@@ -121,8 +128,15 @@
               <label class="sans text-xs flex gap-2 items-center"><input type="checkbox" name="destaque"> Manchete da capa</label>
             </div>
 
+            <div class="painel hidden" id="painel-galeria">
+              <h2>Galeria de imagens</h2>
+              <p class="sans text-xs text-[color:var(--cinza)]">Aparecem depois do texto, em grade. Cada imagem precisa de texto alternativo.</p>
+              <ul id="galeria-lista" class="space-y-3"></ul>
+              <input type="file" id="galeria-arquivos" accept="image/*" multiple class="sans text-xs">
+            </div>
+
             <div class="painel">
-              <h2>Imagem de capa</h2>
+              <h2 id="rotulo-capa">Imagem de capa</h2>
               <img id="capa-prev" class="foto w-full hidden" alt="">
               <input type="file" id="capa-arquivo" accept="image/*" class="sans text-xs">
               <input type="hidden" name="capa_url">
@@ -147,6 +161,40 @@
           </aside>
         </div>
       </form>
+    </div>
+
+    <!-- E-jornal -->
+    <div id="aba-ejornal" class="hidden">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 class="display font-black text-3xl">E-jornal</h1>
+          <p class="sans text-sm mt-1 text-[color:var(--cinza)]">Sem ajustes, o site monta a edição de cada dia sozinho com as matérias publicadas. Aqui você escolhe a manchete, a ordem e o que entra.</p>
+        </div>
+        <label class="campo"><span>Data da edição</span><input type="date" id="ej-data"></label>
+      </div>
+      <div class="grid lg:grid-cols-[1fr_320px] gap-8 mt-6">
+        <div>
+          <p class="sans text-[11px] font-semibold uppercase tracking-wider">Páginas da edição <span class="font-normal normal-case tracking-normal text-[color:var(--cinza)]">— reportagens ganham uma página cada; opinião, editorial e charge vão para a página de Opinião; arte, para Cultura.</span></p>
+          <ol id="ej-itens" class="mt-3 border-t fio"></ol>
+          <div class="mt-4 flex flex-wrap gap-2 items-end">
+            <label class="campo flex-1 min-w-[240px]"><span>Adicionar matéria de outro dia</span><select id="ej-adicionar"></select></label>
+            <button type="button" id="ej-adicionar-btn" class="btn-sec">Adicionar</button>
+          </div>
+        </div>
+        <aside class="space-y-5">
+          <div class="painel">
+            <h2>Edição</h2>
+            <p id="ej-estado" class="sans text-xs"></p>
+            <label class="campo"><span>Título especial (opcional)</span><input id="ej-titulo" placeholder="Ex.: Edição especial — Eleições"></label>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" id="ej-publicar" class="btn">Publicar edição</button>
+              <button type="button" id="ej-rascunho" class="btn-sec">Salvar rascunho</button>
+            </div>
+            <a id="ej-ver" class="btn-link sans text-xs" target="_blank" rel="noopener">Ver edição publicada ↗</a>
+            <button type="button" id="ej-auto" class="btn-link sans text-xs text-left">Voltar à montagem automática</button>
+          </div>
+        </aside>
+      </div>
     </div>
 
     <!-- Denúncias -->

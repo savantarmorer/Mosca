@@ -23,8 +23,7 @@ create table if not exists public.posts (
   titulo text not null,
   linha_fina text,
   descricao text,                       -- meta description (SEO), até ~160 caracteres
-  secao text not null default 'politica'
-    check (secao in ('politica','economia','plataformas','investigacoes','documentos')),
+  secao text not null default 'politica',
   secoes_extra text[] not null default '{}',
   kicker text,
   assinatura text not null default 'Redação Mosca',
@@ -44,6 +43,32 @@ drop policy if exists "posts_publicos" on public.posts;
 create policy "posts_publicos" on public.posts for select to anon, authenticated using (status = 'publicado');
 drop policy if exists "posts_admin" on public.posts;
 create policy "posts_admin" on public.posts for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- Tipos de conteúdo (opinião, charge, arte) — idempotente para quem já rodou a versão anterior.
+alter table public.posts add column if not exists tipo text not null default 'reportagem';
+alter table public.posts add column if not exists colunista text;
+alter table public.posts add column if not exists galeria jsonb not null default '[]';
+alter table public.posts drop constraint if exists posts_tipo_check;
+alter table public.posts add constraint posts_tipo_check check (tipo in ('reportagem','opiniao','editorial','charge','arte'));
+alter table public.posts drop constraint if exists posts_secao_check;
+alter table public.posts add constraint posts_secao_check
+  check (secao in ('politica','economia','plataformas','investigacoes','documentos','opiniao','charges','cultura'));
+
+-- ───────────── E-jornal (edições diárias) ─────────────
+-- Sem registro para um dia, o site monta a edição sozinho com as matérias daquele dia.
+create table if not exists public.edicoes (
+  data date primary key,                 -- dia da edição (horário de Brasília)
+  titulo text,                           -- ex.: "Edição especial: eleições"
+  itens text[] not null default '{}',    -- slugs das matérias, na ordem das páginas
+  manchete text,                         -- slug da manchete da primeira página
+  status text not null default 'rascunho' check (status in ('rascunho','publicada')),
+  atualizado_em timestamptz not null default now()
+);
+alter table public.edicoes enable row level security;
+drop policy if exists "edicoes_publicas" on public.edicoes;
+create policy "edicoes_publicas" on public.edicoes for select to anon, authenticated using (status = 'publicada');
+drop policy if exists "edicoes_admin" on public.edicoes;
+create policy "edicoes_admin" on public.edicoes for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- ───────────── Configuração (chave PGP, build hook) ─────────────
 create table if not exists public.config (
