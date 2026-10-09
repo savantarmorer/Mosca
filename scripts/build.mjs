@@ -127,6 +127,7 @@ ${extra}
 ${FONTES}
 <link rel="stylesheet" href="/assets/tailwind.css">
 <link rel="stylesheet" href="/assets/mosca.css">
+<script src="/assets/apoio.js" defer></script>
 <script type="application/ld+json">${ldJson(ld)}</script>
 </head>
 <body class="antialiased">`;
@@ -154,7 +155,7 @@ const RODAPE = `<footer class="max-w-6xl mx-auto px-4 border-t fio fio-duplo pt-
   <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
     <div><p class="display font-black text-2xl text-[color:var(--tinta)]">Mosca<span class="text-[color:var(--vinho)]">.</span></p><p class="mt-2 leading-relaxed">Jornalismo independente, sem dono e sem patrocinador.</p></div>
     <nav aria-label="Seções" class="flex flex-col gap-2">${Object.entries(SECOES).map(([s, v]) => `<a href="/${s}/">${esc(v.nome)}</a>`).join('')}</nav>
-    <nav aria-label="Participe" class="flex flex-col gap-2"><a href="/colabore/" class="text-[color:var(--vinho)] font-semibold">Publique no Mosca</a><a href="/pauta/">Sugira uma pauta</a><a href="/denuncia/">Denúncia anônima</a><a href="/edicoes/">E-jornal</a><a href="/feed.xml">RSS</a></nav>
+    <nav aria-label="Participe" class="flex flex-col gap-2"><a href="/apoie/" class="text-[color:var(--vinho)] font-semibold">Apoie via Pix</a><a href="/colabore/" class="text-[color:var(--vinho)] font-semibold">Publique no Mosca</a><a href="/pauta/">Sugira uma pauta</a><a href="/denuncia/">Denúncia anônima</a><a href="/edicoes/">E-jornal</a><a href="/feed.xml">RSS</a></nav>
     <nav aria-label="Institucional" class="flex flex-col gap-2"><a href="/quem-somos/">Quem somos</a><a href="/linha-editorial/">Linha editorial</a><a href="/contato/">Contato</a><a href="/termos/">Termos</a><a href="/privacidade/">Privacidade</a></nav>
   </div>
   <p class="mt-8 border-t border-[#d6d3cc] pt-4">© ${new Date().getFullYear()} Mosca. Jornalismo independente.</p>

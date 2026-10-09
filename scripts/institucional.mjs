@@ -4,6 +4,23 @@ const ATUALIZADO = '7 de outubro de 2026';
 
 export const PAGINAS = [
   {
+    caminho: '/apoie/', titulo: 'Apoie o Mosca',
+    desc: 'O Mosca é financiado por quem lê. Apoie o jornalismo investigativo independente com uma doação via Pix (CNPJ 68.595.950/0001-40).',
+    html: `<p>O Mosca não tem dono corporativo, não tem patrocinador e não aceita dinheiro de partidos, governos ou empresas investigadas. Isso só é possível porque o jornalismo que fazemos é pago por quem lê.</p>
+<h2>Doe via Pix</h2>
+<div class="border fio p-6 my-6 text-center bg-white/50">
+<p class="sans text-xs uppercase tracking-widest text-[color:var(--cinza)] !mb-1">Chave Pix (CNPJ)</p>
+<p class="mono !text-2xl !mb-4">68.595.950/0001-40</p>
+<button type="button" class="apoio-copiar-grande" data-pix="68595950000140" style="max-width:320px">Copiar chave Pix</button>
+</div>
+<p>Abra o app do seu banco, escolha <b>Pix → Pagar com chave</b>, cole a chave e escolha o valor. Qualquer quantia ajuda; contribuições mensais ajudam ainda mais, porque permitem planejar investigações longas.</p>
+<h2>Para onde vai o dinheiro</h2>
+<p>As doações custeiam apuração (pedidos de informação, cópias de processos, deslocamentos), a hospedagem e a segurança do site e do canal anônimo de denúncias, e a remuneração de colaboradores.</p>
+<h2>Outras formas de apoiar</h2>
+<p>Compartilhe as reportagens, <a href="/pauta/">sugira uma pauta</a>, <a href="/colabore/">publique no Mosca</a> ou envie documentos pelo <a href="/denuncia/">canal anônimo</a>.</p>
+<script>document.addEventListener('click',function(e){var b=e.target.closest('[data-pix]');if(!b)return;navigator.clipboard&&navigator.clipboard.writeText(b.dataset.pix).then(function(){b.textContent='Chave copiada ✓'})})</script>`,
+  },
+  {
     caminho: '/quem-somos/', titulo: 'Quem somos', tipo: 'AboutPage',
     desc: 'O Mosca é um veículo de jornalismo investigativo independente, sem dono corporativo, sem patrocinador e sem vínculo partidário.',
     html: `<p>O Mosca é um veículo de jornalismo investigativo independente, sem dono corporativo, sem patrocinador e sem vínculo partidário. O nome vem da mosca na sopa: o incômodo necessário, a presença que não deixa o poder confortável.</p>
