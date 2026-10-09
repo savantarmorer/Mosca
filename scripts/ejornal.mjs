@@ -184,7 +184,7 @@ export function criarEjornal(h) {
     const titulo = `E-jornal Mosca — Edição nº ${ed.numero}, ${dataExtenso(ed.data)}`;
     return h.head({ titulo, desc: `Leia a edição nº ${ed.numero} do Mosca em formato de jornal: ${ed.manchete.titulo}.`, caminho: `/edicao/${ed.data}/`, index: false,
       imagem: ed.manchete._img?.og || '/assets/img/og-default.jpg', extra: '<link rel="stylesheet" href="/assets/ejornal.css">',
-      ld: [{ '@context': 'https://schema.org', '@type': 'PublicationIssue', issueNumber: String(ed.numero), datePublished: ed.data, name: titulo, isPartOf: { '@type': 'Periodical', name: 'Mosca', url: SITE + '/' } }] }) + `
+      ld: [{ '@context': 'https://schema.org', '@type': 'PublicationIssue', issueNumber: String(ed.numero), datePublished: ed.data, name: titulo, isPartOf: { '@type': 'Newspaper', name: 'Mosca', url: SITE + '/', inLanguage: 'pt-BR' } }] }) + `
 <div class="ej-barra">
   <a href="/" class="ej-voltar">← Mosca</a>
   <span class="ej-info">Edição nº ${ed.numero} · ${esc(dataExtenso(ed.data))}</span>

@@ -188,6 +188,10 @@ const SWG = `<script async type="application/javascript" src="https://news.googl
 const ROTULO = { opiniao: 'Opinião', editorial: 'Editorial', charge: 'Charge', arte: 'Arte & Cultura', poesia: 'Poesia', cronica: 'Crônica' };
 const kicker = p => esc(p.kicker || ROTULO[p.tipo] || SECOES[p.secao].nome);
 const autor = p => p.tipo === 'editorial' ? 'Editorial do Mosca' : AUTORAL.has(p.tipo) ? p.colunista || p.assinatura || 'Redação Mosca' : p.assinatura || 'Redação Mosca';
+// Tipo schema.org mais específico (V30): análise, reportagem investigativa, opinião, cultura.
+const tipoSchema = p => OPINIAO.has(p.tipo) ? 'OpinionNewsArticle' : p.tipo === 'poesia' ? 'CreativeWork' : CULTURA.has(p.tipo) ? 'Article'
+  : /an[áa]lise/i.test(p.kicker || '') ? 'AnalysisNewsArticle'
+  : p.secao === 'investigacoes' || (p.secoes_extra || []).includes('investigacoes') || /investiga/i.test(p.kicker || '') ? 'ReportageNewsArticle' : 'NewsArticle';
 const autorSlug = p => AUTORAL.has(p.tipo) && p.colunista ? slugify(p.colunista) : null;
 const autorLink = p => autorSlug(p) ? `<a href="/autor/${autorSlug(p)}/" class="hover:underline" rel="author">${esc(autor(p))}</a>` : esc(autor(p));
 function galeria(p) {
@@ -204,7 +208,7 @@ function materia(p, todos) {
   const imagens = [...new Set([p._img?.og, p.og_imagem, p._img?.src, p.capa_url, p._ogVideo].filter(Boolean).map(abs))];
   const temas = (p.palavras_chave || []).map(k => [k, slugify(k)]).filter(([, s]) => s);
   const ld = [{
-    '@context': 'https://schema.org', '@type': OPINIAO.has(p.tipo) ? 'OpinionNewsArticle' : p.tipo === 'poesia' ? 'CreativeWork' : CULTURA.has(p.tipo) ? 'Article' : 'NewsArticle',
+    '@context': 'https://schema.org', '@type': tipoSchema(p),
     genre: { poesia: 'Poesia', cronica: 'Crônica', arte: 'Arte' }[p.tipo],
     mainEntityOfPage: { '@type': 'WebPage', '@id': SITE + url(p) },
     headline: (p.titulo_seo || p.titulo).slice(0, 110), alternativeHeadline: p.linha_fina || undefined, description: desc,
