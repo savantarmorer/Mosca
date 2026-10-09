@@ -58,7 +58,7 @@
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
     Cache-Control = "no-store"
-    Content-Security-Policy = "default-src 'self'; connect-src 'self' https://pvdznwgrbeuudzhuqicw.supabase.co https://api.netlify.com; img-src 'self' data: blob: https://pvdznwgrbeuudzhuqicw.supabase.co; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-src https://www.youtube.com https://player.vimeo.com; frame-ancestors 'none'; base-uri 'none'"
+    Content-Security-Policy = "default-src 'self'; connect-src 'self' https://pvdznwgrbeuudzhuqicw.supabase.co https://api.netlify.com; img-src 'self' data: blob: https://pvdznwgrbeuudzhuqicw.supabase.co; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'none'; base-uri 'none'"
 
 [[redirects]]
   from = "/admin"

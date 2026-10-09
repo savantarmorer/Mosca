@@ -36,12 +36,37 @@ const iso = d => new Date(d).toISOString();
 const ldJson = o => JSON.stringify(o).replace(/</g, '\\u003c');
 const write = (rel, html) => { const f = path.join(ROOT, rel); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, html); };
 
+// Converte qualquer link do YouTube/Vimeo no endereço de incorporação (o YouTube recusa /watch dentro de iframes).
+export function urlEmbed(u = '') {
+  const yt = u.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})/i);
+  if (yt) {
+    const t = u.match(/[?&](?:t|start)=(\d+)/);
+    return { tipo: 'youtube', id: yt[1], src: `https://www.youtube-nocookie.com/embed/${yt[1]}${t ? `?start=${t[1]}` : ''}` };
+  }
+  const vm = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (vm) return { tipo: 'vimeo', id: vm[1], src: `https://player.vimeo.com/video/${vm[1]}` };
+  return null;
+}
+function limparHtml(html) {
+  return html
+    .replace(/<iframe\b[^>]*\bsrc="([^"]+)"[^>]*>\s*<\/iframe>/gi, (m, src) => {
+      const e = urlEmbed(src.replace(/&amp;/g, '&'));
+      if (!e) return m;
+      return `<div class="video"><iframe src="${e.src}" title="Vídeo incorporado (${e.tipo === 'youtube' ? 'YouTube' : 'Vimeo'})" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+    })
+    .replace(/<p>(?:\s|<br\s*\/?>|&nbsp;)*<\/p>/gi, '')          // parágrafos vazios que o editor deixa
+    .replace(/\sclass="ql-[a-z-]+"/gi, m => /ql-align|ql-indent/.test(m) ? m : '');
+}
+const videosDe = p => [...corpoHtml(p).matchAll(/<iframe\b[^>]*\bsrc="([^"]+)"/gi)].map(m => urlEmbed(m[1].replace(/&amp;/g, '&'))).filter(Boolean);
+
 function corpoHtml(p) {
-  if (p.formato !== 'texto') return p.conteudo;
+  if (p.formato !== 'texto') return limparHtml(p.conteudo);
   return p.conteudo.split(/\n\s*\n/).map(par => par.trim()).filter(Boolean)
     .map(par => `<p>${esc(par).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>').replace(/\n/g, '<br>')}</p>`).join('\n');
 }
 const textoPuro = h => h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+// Resumo para meta description: corta em palavra inteira e marca o corte.
+const resumir = (t, max = 155) => t.length <= max ? t : t.slice(0, max).replace(/[\s,;:.!?—-]+\S*$/, '').replace(/[\s,;:—-]+$/, '') + '…';
 const minutos = p => Math.max(1, Math.round(textoPuro(corpoHtml(p)).split(' ').length / 200));
 const url = p => `/${p.secao}/${p.slug}/`;
 const slugify = t => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -173,10 +198,10 @@ function galeria(p) {
 // ───────── matéria ─────────
 function materia(p, todos) {
   const s = SECOES[p.secao];
-  const desc = p.descricao || p.linha_fina || (p.tipo === 'poesia' ? `Poema de ${autor(p)} publicado no Mosca: ${textoPuro(corpoHtml(p)).slice(0, 110)}…` : textoPuro(corpoHtml(p)).slice(0, 155)) || `${ROTULO[p.tipo] || 'Matéria'}: ${p.titulo}`;
+  const desc = p.descricao || p.linha_fina || (p.tipo === 'poesia' ? `Poema de ${autor(p)} publicado no Mosca: ${resumir(textoPuro(corpoHtml(p)), 110)}` : resumir(textoPuro(corpoHtml(p)))) || `${ROTULO[p.tipo] || 'Matéria'}: ${p.titulo}`;
   const relacionadas = todos.filter(o => o !== p && (o.secao === p.secao || (o.secoes_extra || []).includes(p.secao))).slice(0, 3);
-  const og = p._img?.og || p.og_imagem || p.capa_url || '/assets/img/og-default.jpg';
-  const imagens = [...new Set([p._img?.og, p.og_imagem, p._img?.src, p.capa_url].filter(Boolean).map(abs))];
+  const og = p._img?.og || p.og_imagem || p.capa_url || p._ogVideo || '/assets/img/og-default.jpg';
+  const imagens = [...new Set([p._img?.og, p.og_imagem, p._img?.src, p.capa_url, p._ogVideo].filter(Boolean).map(abs))];
   const temas = (p.palavras_chave || []).map(k => [k, slugify(k)]).filter(([, s]) => s);
   const ld = [{
     '@context': 'https://schema.org', '@type': OPINIAO.has(p.tipo) ? 'OpinionNewsArticle' : p.tipo === 'poesia' ? 'CreativeWork' : CULTURA.has(p.tipo) ? 'Article' : 'NewsArticle',
@@ -191,6 +216,9 @@ function materia(p, todos) {
     isPartOf: { '@type': ['CreativeWork', 'Product'], name: 'Mosca', productID: SWG_ID },
     about: temas.map(([k]) => ({ '@type': 'Thing', name: k })),
   }, crumbs([['Início', '/'], [s.nome, `/${p.secao}/`], [p.titulo, null]])];
+  for (const v of videosDe(p)) ld.push({ '@context': 'https://schema.org', '@type': 'VideoObject', name: p.titulo, description: desc, embedUrl: v.src,
+    thumbnailUrl: v.tipo === 'youtube' ? `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` : abs(p._img?.og || '/assets/img/og-default.jpg'),
+    uploadDate: iso(p.publicado_em), ...(v.tipo === 'youtube' ? { contentUrl: `https://www.youtube.com/watch?v=${v.id}` } : {}) });
   if (p.tipo === 'arte') for (const g of [p.capa_url && { url: p._img?.src || p.capa_url, alt: p.capa_alt, legenda: p.capa_credito }, ...p.galeria].filter(Boolean))
     ld.push({ '@context': 'https://schema.org', '@type': 'VisualArtwork', name: g.legenda || p.titulo, image: abs(g.url), description: g.alt, creator: { '@type': autorSlug(p) ? 'Person' : 'Organization', name: autor(p) }, dateCreated: iso(p.publicado_em), isPartOf: SITE + url(p) });
   if (p.tipo === 'charge' && p.capa_url) ld.push({ '@context': 'https://schema.org', '@type': 'ImageObject', contentUrl: abs(p._img?.src || p.capa_url), name: p.titulo, caption: p.capa_alt, creator: { '@type': p.colunista ? 'Person' : 'Organization', name: autor(p) }, datePublished: iso(p.publicado_em), creditText: autor(p), copyrightNotice: 'Mosca' });
@@ -203,7 +231,7 @@ function materia(p, todos) {
     `<meta property="og:image:type" content="image/jpeg">`,
     SWG,
   ].filter(Boolean).join('\n');
-  return head({ titulo: `${p.titulo_seo || p.titulo} | Mosca`, desc, caminho: url(p), tipo: 'article', imagem: og, imgW: p._img || p.og_imagem ? 1200 : p.capa_largura, imgH: p._img || p.og_imagem ? 630 : p.capa_altura, imgAlt: p.capa_alt, extra, ld }) + `
+  return head({ titulo: `${p.titulo_seo || p.titulo} | Mosca`, desc, caminho: url(p), tipo: 'article', imagem: og, imgW: p._img || p.og_imagem || p._ogVideo ? 1200 : p.capa_largura, imgH: p._img || p.og_imagem || p._ogVideo ? 630 : p.capa_altura, imgAlt: p.capa_alt, extra, ld }) + `
 ${TOPO}
 <main>
 <article class="max-w-[720px] mx-auto px-4 pt-8 pb-16">
@@ -421,7 +449,12 @@ ${RODAPE}`];
 const posts = await carregar();
 const edicoesPers = await carregarEdicoes();
 for (const s of [...Object.keys(SECOES), 'tema', 'edicao', 'edicoes', 'autor']) fs.rmSync(path.join(ROOT, s), { recursive: true, force: true });
-for (const p of posts) p._img = await processarCapa(ROOT, p);
+for (const p of posts) {
+  p._img = await processarCapa(ROOT, p);
+  const v = !p.capa_url && videosDe(p).find(x => x.tipo === 'youtube');
+  if (v) p._ogVideo = (await processarCapa(ROOT, { slug: `${p.slug}-video`, capa_url: `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg` })
+    || await processarCapa(ROOT, { slug: `${p.slug}-video`, capa_url: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` }))?.og;
+}
 for (const pg of PAGINAS) write(`${pg.caminho.slice(1)}index.html`, simples(pg));
 write('404.html', simples({ caminho: '/404.html', titulo: 'Página não encontrada', desc: 'Página não encontrada.', index: false,
   html: '<p>O endereço pode ter mudado ou a página foi removida.</p><p><a href="/">Voltar à capa</a> · <a href="/feed.xml">Últimas matérias (RSS)</a></p>' }));

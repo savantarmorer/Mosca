@@ -102,7 +102,18 @@ const quill = new Quill('#quill', {
         ['image', 'video'],
         ['clean'],
       ],
-      handlers: { image: () => escolherArquivo('image/*', async f => inserirNoTexto('image', await enviarMidia(f))) },
+      handlers: {
+        image: () => escolherArquivo('image/*', async f => inserirNoTexto('image', await enviarMidia(f))),
+        // aceita o link normal do YouTube/Vimeo e converte para o endereço de incorporação
+        video: () => {
+          const u = prompt('Cole o link do vídeo (YouTube ou Vimeo):'); if (!u) return;
+          const yt = u.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/i);
+          const vm = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+          const src = yt ? `https://www.youtube-nocookie.com/embed/${yt[1]}` : vm ? `https://player.vimeo.com/video/${vm[1]}` : null;
+          if (!src) return toast('Link não reconhecido. Use um link do YouTube ou do Vimeo.', true);
+          const r = quill.getSelection(true); quill.insertEmbed(r.index, 'video', src, 'user');
+        },
+      },
     },
   },
 });
@@ -267,6 +278,13 @@ form.addEventListener('submit', async e => {
       dados.galeria.some(g => !g.alt) && 'texto alternativo de todas as imagens da galeria',
     ].filter(Boolean);
     if (faltando.length) return toast(`Antes de publicar, preencha: ${faltando.join(', ')}.`, true);
+    const seo = [
+      !dados.descricao && 'descrição para o Google (sem ela, o site usa o começo do texto)',
+      !dados.palavras_chave.length && 'palavras-chave (geram as páginas de tema e o Google News)',
+      !dados.capa_url && !/<iframe/i.test(dados.conteudo) && 'imagem de capa (sem ela, o compartilhamento no WhatsApp/Google mostra só o logo)',
+      dados.titulo.length > 110 && 'título com mais de 110 caracteres (o Google corta)',
+    ].filter(Boolean);
+    if (seo.length && !confirm(`SEO incompleto:\n\n• ${seo.join('\n• ')}\n\nPublicar assim mesmo?`)) return;
   }
   $$('#editor button').forEach(b => (b.disabled = true));
   try {
