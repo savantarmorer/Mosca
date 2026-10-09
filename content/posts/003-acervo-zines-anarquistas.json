@@ -1,0 +1,29 @@
+{
+  "slug": "acervo-reune-184-zines-anarquistas-de-malatesta-a-graeber",
+  "tipo": "reportagem",
+  "titulo": "Acervo on-line reúne 184 zines anarquistas, de Malatesta e Emma Goldman a guias de organização comunitária",
+  "titulo_seo": "Acervo on-line reúne 184 zines anarquistas, de Malatesta a Graeber",
+  "linha_fina": "Arquivo espelha biblioteca pública do GitHub, tem acesso restrito a maiores de 18 anos e aviso legal que repudia incitação ao crime.",
+  "descricao": "Acervo com 184 zines anarquistas em inglês reúne clássicos de Malatesta, Emma Goldman e Graeber e guias de organização comunitária. Veja o que há e o aviso legal.",
+  "secao": "documentos",
+  "secoes_extra": [
+    "cultura"
+  ],
+  "kicker": "Acervo · Memória dos movimentos",
+  "assinatura": "Redação Mosca",
+  "palavras_chave": [
+    "anarquismo",
+    "zines",
+    "acervo",
+    "Malatesta",
+    "Emma Goldman",
+    "David Graeber",
+    "movimentos sociais"
+  ],
+  "formato": "html",
+  "conteudo": "<p>Uma biblioteca com 184 zines e panfletos anarquistas, em inglês e prontos para imprimir, foi colocada no ar em outubro no endereço <a href=\"https://iuripiragibe.net/anarquia/\">iuripiragibe.net/anarquia</a>. O acervo reúne desde textos clássicos de Errico Malatesta, Emma Goldman e David Graeber até manuais práticos de organização comunitária, e se apresenta como um arquivo de “memória dos movimentos” voltado a pesquisa, estudo e jornalismo.</p>\n<p>O material não é inédito: é um espelho, sem alterações, das pastas “Basic Intros” e “Guides” do repositório público <a href=\"https://github.com/rechelon/zine_library\">rechelon/zine_library</a>, no GitHub, copiadas em 5 de outubro de 2026. A página registra a versão exata usada (commit 47beb5b) e indica um canal para pedidos de remoção.</p>\n<h2>O que tem no acervo</h2>\n<p>O arquivo se divide em dois blocos. O primeiro, com 38 títulos, reúne introduções ao pensamento anarquista: <em>Anarchy</em> e <em>Towards Anarchy</em>, de Malatesta; <em>Anarchism: What It Really Stands For</em>, de Goldman; <em>Are You An Anarchist?</em>, de Graeber; os dois volumes de <em>Anarchy Works</em>, de Peter Gelderloos; além de textos sobre trabalho, democracia, polícia e abolição prisional.</p>\n<p>O segundo bloco, com 146 títulos, é formado por guias práticos. Boa parte trata de organização de base — como montar uma assembleia de bairro, organizar os moradores de um prédio, facilitar reuniões ou criar um grupo de estudos —, de redes de apoio a pessoas presas, de primeiros socorros em atos e de segurança digital, com manuais sobre mensagens criptografadas e sistemas operacionais voltados à privacidade.</p>\n<blockquote>A publicação não constitui endosso, recomendação, incentivo ou instrução para a prática de qualquer conduta.</blockquote>\n<h2>Aviso legal e acesso restrito</h2>\n<p>O acesso é precedido de um aviso legal extenso, que o visitante precisa aceitar. O texto invoca a liberdade de expressão, de informação e de imprensa garantida pela Constituição (art. 5º, incisos IV, IX e XIV, e art. 220), afirma que o acervo tem “finalidade exclusivamente documental” e declara que o responsável “repudia expressamente qualquer ato ilícito, violência ou dano a pessoas e patrimônio”, citando os artigos 286 e 287 do Código Penal, que tratam de incitação e apologia ao crime.</p>\n<p>O próprio aviso reconhece que parte do conteúdo “descreve condutas que podem ser ilegais no Brasil ou em outros países” e ressalva que “conhecê-lo não autoriza praticá-las”. O acesso é restrito a maiores de 18 anos, e a página não é indexada pelos buscadores.</p>\n<h2>Por que um arquivo como esse importa</h2>\n<p>Zines — publicações curtas, baratas e feitas para circular de mão em mão — são há décadas um dos principais suportes da cultura política autônoma. Muitos dos textos reunidos no acervo foram escritos anonimamente e circulam fora das editoras e das bibliotecas tradicionais, o que torna sua preservação frágil. Reunidos e catalogados, viram fonte para quem estuda movimentos sociais, história política e cultura gráfica independente.</p>\n<p>O debate sobre os limites entre documentar e incentivar não é novo, e o acervo assume essa tensão de forma explícita: reproduz os textos tal como circulam publicamente e transfere ao leitor a responsabilidade por cumprir as leis do seu país.</p>\n<p class=\"sans text-sm border-t pt-4 mt-8\"><b>Nota de transparência:</b> o acervo é mantido pelo jornalista Iuri Piragibe, que tem vínculo com o Mosca.</p>",
+  "status": "publicado",
+  "destaque": false,
+  "publicado_em": "2026-10-09T19:00:00Z",
+  "atualizado_em": "2026-10-09T19:00:00Z"
+}
