@@ -97,7 +97,7 @@ a:hover .ej-mini .folha{transform:translateY(-3px)}
   .ej-viewer>.folha:nth-child(odd){box-shadow:inset 18px 0 24px -18px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.2)}
   .ej-viewer>.folha:nth-child(even){box-shadow:inset -18px 0 24px -18px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.2)}
 }
-@media (max-width:640px){.fi{font-size:2.1cqw}.ej-c3{column-count:2}.ej-info{display:none}}
+@media (max-width:640px){.ej-info{display:none}}
 /* PDF / impressão: uma página A4 por folha */
 @media print{
   @page{size:A4;margin:0}
@@ -112,3 +112,13 @@ a:hover .ej-mini .folha{transform:translateY(-3px)}
 .ej-poema .ej-colunas p{margin-bottom:1.2em}
 .ej-poema .ej-colunas{font-size:2.3cqw;line-height:1.6;padding:2cqw 0 0 12cqw;-webkit-mask-image:none;mask-image:none}
 .ej-poema .ej-h-materia{font-size:5.2cqw;text-align:left}
+/* continuação entre páginas */
+.ej-continuacao{font-family:'Inter',sans-serif;font-size:1.2cqw;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #151515;padding-bottom:.8cqw;margin:0 0 1.6cqw!important;color:#333}
+.ej-continuacao span{color:#8B0000;font-weight:700;margin-right:.6cqw}
+.ej-italico{font-style:italic}
+.ej-fim a{text-transform:none}
+.ej-charges{display:grid;gap:3cqw;flex:1 1 0;min-height:0;grid-template-rows:repeat(auto-fit,minmax(0,1fr))}
+.ej-charges figure{margin:0;display:flex;flex-direction:column;min-height:0}
+.ej-charges img{flex:1;min-height:0;width:100%;object-fit:contain;background:#fff;border:1px solid #151515}
+.ej-charges figcaption{font-size:1.5cqw;margin-top:.8cqw}
+.ej-opiniao-texto .ej-colunas{text-align:left;hyphens:auto}
